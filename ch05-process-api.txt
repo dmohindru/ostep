@@ -1,0 +1,174 @@
+UNIX presents one of the most intriguing ways to create a new process with a pair of system calls: fork() and exec(). A third routine, wait(), can be used by a process wishing to wait for a process it has created to complete.
+
+5.1 The fork() System Call
+---------------------------
+In UNIX systems, the PID is used to name the process if one wants to do something with the process, such as (for example) stop it from running.
+
+The value it returns to the caller of fork() is different. Specifically, while the parent receives the PID of the newly-created child, the child receives a return code of zero.
+
+When the child process is created, there are now two active processes in the system that we care about: the parent and the child. Assuming we are running on a system with a single CPU (for simplicity), then either the child or the parent might run at that point.
+
+5.2 The wait() System Call
+--------------------------
+Sometimes, as it turns out, it is quite useful for a parent to wait for a child process to finish what it has been doing. This task is accomplished with the wait() system call (or its more complete sibling waitpid())
+
+5.3 Finally, The exec() System Call
+-----------------------------------
+The fork() system call is strange; its partner in crime, exec(), is not so normal either. What it does: given the name of an executable (e.g., wc), and some arguments (e.g., p3.c), it loads code (and static data) from that executable and overwrites its current code segment (and current static data) with it; the heap and stack and other parts of the memory space of the program are re-initialized. Thus, it does not create a new process; rather, it transforms the currently running program (formerly p3) into a different running program (wc).
+
+5.4 Why? Motivating The API
+---------------------------
+Of course, one big question you might have: why would we build such an odd interface to what should be the simple act of creating a new process? Well, as it turns out, the separation of fork() and exec() is essential in building a UNIX shell, because it lets the shell run code after the call to fork() but before the call to exec(); this code can alter the environment of the about-to-be-run program, and thus enables a variety of interesting features to be readily built.
+
+In the example above, the output of the program wc is redirected into the output file newfile.txt (the greater-than sign is how said redirec- tion is indicated). The way the shell accomplishes this task is quite sim- ple: when the child is created, before calling exec(), the shell closes standard output and opens the file newfile.txt. By doing so, any out- put from the soon-to-be-running program wc are sent to the file instead of the screen.
+
+UNIX pipes are implemented in a similar way, but with the pipe() system call. In this case, the output of one process is connected to an in- kernel pipe (i.e., queue), and the input of another process is connected to that same pipe; thus, the output of one process seamlessly is used as input to the next, and long and useful chains of commands can be strung together.
+
+5.5 Process Control And Users
+-----------------------------
+The kill() system call is used to send signals to a process, including di- rectives to pause, die, and other useful imperatives. The entire signals subsystem provides a rich infrastructure to deliver external events to processes, including ways to receive and process those signals within individual processes, and ways to send signals to individual processes as well as entire process groups.
+
+This naturally raises the question: who can send a signal to a process, and who cannot? if one of these people can arbitrarily send signals such as SIGINT (to interrupt a process, likely terminating it), the usability and security of the system will be compromised. As a result, modern systems include a strong conception of the notion of a user. The user, after entering a password to establish credentials, logs in to gain access to system resources. The user may then launch one or many pro- cesses, and exercise full control over them (pause them, kill them, etc.).
+
+5.6 Useful Tools
+----------------
+- ps:  ps command allows you to see which processes are running
+- top: top command displays the processes of the system and how much CPU and other resources they are eating up.
+- kill: kill can be used to send arbitrary signals to processes
+
+
+Homework exercises
+------------------
+Q1: ./fork.py -s 10
+a forks b
+a
+|-b
+
+a forks c
+a
+|-b
+|-c
+
+c exits
+a
+|-b
+
+a forks d
+a
+|-b
+|-d
+
+a forks e
+a
+|-b
+|-d
+|-e
+
+./fork.py -s 10
+Action: a forks b
+a
+|-b
+
+Action: b forks c
+a
+|-b
+  |-c
+
+Action: a forks d
+a
+|-b
+| |-c
+|-d
+
+
+Action: a forks e
+a
+|-b
+| |-c
+|-d
+|-e
+
+Action: b forks f
+
+a
+|-b
+| |-c
+| |-f
+|-d
+|-e
+
+Q2: ./fork.py -s 13 -a 50 -f 0.5
+Action: a forks b
+Action: b EXITS
+Action: a forks c
+Action: a forks d
+Action: c forks e
+Action: d EXITS
+Action: a forks f
+Action: f forks g
+Action: g EXITS
+Action: e EXITS
+Action: f EXITS
+Action: c forks h
+Action: h EXITS
+Action: a forks i
+Action: a forks j
+Action: j EXITS
+Action: i EXITS
+Action: c EXITS
+Action: a forks k
+Action: k forks l
+a
+|-k
+| |-l
+
+Q3: ./fork.py -s 13 -a 20 -f 0.4 -t
+Action: a forks b
+Action: b EXITS
+Action: a forks c
+Action: a forks d
+Action: c forks e
+Action: d EXITS
+Action: a forks f
+Action: f forks g
+Action: g EXITS
+Action: e EXITS
+Action: f EXITS
+Action: c forks h
+Action: h EXITS
+Action: a forks i
+Action: a forks j
+Action: j EXITS
+Action: i EXITS
+Action: c EXITS
+Action: a forks k
+Action: k forks l
+
+Q4: ./fork.py -A a+b,b+c,c+d,c+e,c-
+When a parent process exits all its children become child process of root parent process. In above case final process tree will look like this
+a
+|-b
+|-d
+|-e
+
+./fork.py -A a+b,b+c,c+d,c+e,c- -R
+With -R option which is reparent to local parent in that case children to exiting process becomes child process of immediate parent of exiting process. In this case final process tree will look like this
+a
+|-b
+| |-d
+| |-e
+
+Q5: ./fork.py -s 1 -F
+a
+|-b
+|-e
+|-d
+
+Q6: ./fork.py -s 1 -F -t
+Above command prints the final process tree but doesn't prints intermediate process tree. Hence its impossible to list all the exact actions that were performed.
+In order to list all the exact actions that took place we need to have process tree of each step. So with below command we can list exact actions performed.
+./fork.py -s 1 -t
+
+
+
+

@@ -1,0 +1,330 @@
+4.1 The Abstraction: A Process
+------------------------------
+To understand what constitutes a process, we thus have to understand its machine state: what a program can read or update when it is running. At any given time, what parts of the machine are important to the execution of this program?
+
+various components of machine state: memory, cpu registers, program counter, stack pointer, frame pointer, list of files the process currently open.
+
+4.2 Process API
+---------------
+APIs, in some form, are available on any modern operating system.
+- Create
+- Destory
+- Wait
+- Miscellaneous Controll
+- Status
+
+4.3 Process Creation: A Little More Detail
+------------------------------------------
+The first thing that the OS must do to run a program is to load its code and any static data (e.g., initialized variables) into memory, into the address space of the process.
+
+Some memory must be allocated for the program’s run-time stack (or just stack).
+
+The OS may also allocate some memory for the program’s heap.
+
+The OS will also do some other initialization tasks, particularly as re- lated to input/output (I/O). For example, in UNIX systems, each process by default has three open file descriptors, for standard input, output, and error; these descriptors let programs easily read input from the terminal and print output to the screen.
+
+4.4 Process States
+------------------
+In a simplified view, a process can be in one of three states:
+• Running: In the running state, a process is running on a processor. This means it is executing instructions.
+• Ready: In the ready state, a process is ready to run but for some reason the OS has chosen not to run it at this given moment.
+• Blocked: In the blocked state, a process has performed some kind of operation that makes it not ready to run until some other event takes place. A common example: when a process initiates an I/O request to a disk, it becomes blocked and thus some other process can use the processor.
+
+4.5 Data Structures
+-------------------
+The OS is a program, and like any program, it has some key data struc- tures that track various relevant pieces of information.
+
+The register context will hold, for a stopped process, the contents of its registers.
+
+You can also see from the figure that there are some other states a pro- cess can be in, beyond running, ready, and blocked.
+
+This final state can be useful as it allows other processes (usually the parent that created the process) to examine the return code of the process and see if the just-finished process executed successfully (usually, programs return zero in UNIX-based systems when they have accomplished a task successfully, and non-zero otherwise).
+
+Sometimes people refer to the individual struc- ture that stores information about a process as a Process Control Block (PCB), a fancy way of talking about a C structure that contains informa- tion about each process (also sometimes called a process descriptor).
+
+
+Research Points
+---------------
+- C Enums: Bit of context and sizeof c enums
+
+Homework exercises
+------------------
+Q1: ./process-run.py -l 5:100,5:100
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:cpu 		READY			  1
+ 2 			RUN:cpu 		READY			  1
+ 3 			RUN:cpu 		READY			  1
+ 4 			RUN:cpu 		READY			  1
+ 5 			RUN:cpu 		READY			  1
+ 6 			DONE	 		RUN:cpu			  1
+ 7 			DONE	 		RUN:cpu			  1
+ 8 			DONE	 		RUN:cpu			  1
+ 9 			DONE	 		RUN:cpu			  1
+10 			DONE	 		RUN:cpu			  1
+
+Stats: Total Time 10
+Stats: CPU Busy 10 (100%) 
+Stats: IO Busy 0 (0.00%)
+Remarks: No time was wasted on IO operation hence cpu utilization 100%
+
+Q2: ./process-run.py -l 4:100,1:0
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:cpu 		READY			  1
+ 2 			RUN:cpu 		READY			  1
+ 3 			RUN:cpu 		READY			  1
+ 4 			RUN:cpu 		READY			  1
+ 5 			DONE	 		RUN:io			  1				   
+ 6 			DONE	 		WAITING			  				   1
+ 7 			DONE	 		WAITING			  				   1
+ 8 			DONE	 		WAITING			  				   1
+ 9 			DONE	 		WAITING			  				   1
+10 			DONE	 		WAITING			  				   1
+11*			DONE	 		RUN:io_done		  1				   
+
+Stats: Total Time 11
+Stats: CPU Busy 6 (54.54%) 
+Stats: IO Busy 5 (45.45%)
+
+Q3: ./process-run.py -l 1:0,4:100
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:io  		READY			  1
+ 2 			WAITING  		RUN:cpu			  1 			   1
+ 3 			WAITING  		RUN:cpu			  1 			   1
+ 4 			WAITING  		RUN:cpu			  1 			   1
+ 5 			WAITING  		RUN:cpu			  1 			   1
+ 6 			WAITING  		DONE 							   1
+ 7*			RUN:io_done		DONE 			  1			  
+
+Stats: Total Time 7
+Stats: CPU Busy 6 (85.71%) 
+Stats: IO Busy 5 (71.43%)
+
+Q4: ./process-run.py -l 1:0,4:100 -S SWITCH_ON_END
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:io  		READY			  1
+ 2 			WAITING			READY							  1
+ 3 			WAITING			READY							  1
+ 4 			WAITING			READY							  1
+ 5 			WAITING			READY							  1
+ 6 			WAITING			READY							  1
+ 7*			RUN:io_done		READY			  1
+ 8 			DONE 			RUN:cpu 		  1
+ 9 			DONE 			RUN:cpu 		  1
+10 			DONE 			RUN:cpu 		  1
+11 			DONE 			RUN:cpu 		  1
+
+Stats: Total Time 11
+Stats: CPU Busy 6 (54.54%) 
+Stats: IO Busy 5 (45.45%)
+
+Q5: ./process-run.py -l 1:0,4:100 -S SWITCH_ON_IO
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:io  		READY			  1
+ 2 			WAITING  		RUN:cpu			  1 			   1
+ 3 			WAITING  		RUN:cpu			  1 			   1
+ 4 			WAITING  		RUN:cpu			  1 			   1
+ 5 			WAITING  		RUN:cpu			  1 			   1
+ 6 			WAITING  		DONE 							   1
+ 7*			RUN:io_done		DONE 			  1			  
+
+Stats: Total Time 7
+Stats: CPU Busy 6 (85.71%) 
+Stats: IO Busy 5 (71.43%)
+
+
+Q6: ./process-run.py -l 3:0,5:100,5:100,5:100 -S SWITCH_ON_IO -I IO_RUN_LATER
+Time 		PID:0 			PID:1 			PID:2 			PID:3 			CPU				IOs
+ 1 			RUN:io 			READY 			READY 			READY 			  1
+ 2 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 3 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 4 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 5 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 6  		WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 7* 		WAITING		 	DONE 	 		RUN:cpu 		READY 			  1 			  
+ 8  		WAITING		 	DONE 	 		RUN:cpu 		READY 			  1 			  
+ 9  		WAITING		 	DONE 	 		RUN:cpu 		READY 			  1 			  
+10  		WAITING		 	DONE 	 		RUN:cpu 		READY 			  1 			  
+11  		WAITING		 	DONE 	 		RUN:cpu 		READY 			  1 			  
+12  		WAITING		 	DONE 	 		DONE 	 		RUN:cpu 		  1 			  
+13  		WAITING		 	DONE 	 		DONE 	 		RUN:cpu 		  1 			  
+14  		WAITING		 	DONE 	 		DONE 	 		RUN:cpu 		  1 			  
+15  		WAITING		 	DONE 	 		DONE 	 		RUN:cpu 		  1 			  
+16  		WAITING		 	DONE 	 		DONE 	 		RUN:cpu 		  1 			  
+17  		RUN:io_done		DONE 	 		DONE 	 		DONE 	 		  1 			  
+18  		RUN:io 			DONE 	 		DONE 	 		DONE 	 		  1 			  
+19  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+20  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+21  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+22  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+23  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+24*  		RUN:io_done		DONE 	 		DONE 	 		DONE 	 		  1 			  
+25  		RUN:io 			DONE 	 		DONE 	 		DONE 	 		  1 			  
+26  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+27  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+28  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+29  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+30  		WAITING			DONE 	 		DONE 	 		DONE 	 		  				  1 			  
+31*  		RUN:io_done		DONE 	 		DONE 	 		DONE 	 		  1 				
+
+Stats: Total Time 31
+Stats: CPU Busy 21 (67.74%) 
+Stats: IO Busy 15 (48.39%)		
+Remarks: System resources are not utilized effectively. Since CPU was ideal waiting for io to complete during cpu cycles 19-31   	  
+
+
+
+Q7: ./process-run.py -l 3:0,5:100,5:100,5:100 -S SWITCH_ON_IO -I IO_RUN_IMMEDIATE
+Time 		PID:0 			PID:1 			PID:2 			PID:3 			CPU				IOs
+ 1 			RUN:io 			READY 			READY 			READY 			  1
+ 2 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 3 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 4 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 5 			WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 6  		WAITING 		RUN:cpu 		READY 			READY 			  1 			  1
+ 7* 		RUN:io_done 	DONE 	 		READY 			READY 			  1 			  
+ 8  		RUN:io 		 	DONE 	 		READY 			READY 			  1 			  
+ 9  		WAITING 		DONE 	 		RUN:cpu 		READY 			  1 			  1
+10  		WAITING 		DONE 	 		RUN:cpu 		READY 			  1 			  1
+11  		WAITING 		DONE 	 		RUN:cpu 		READY 			  1 			  1
+12  		WAITING 		DONE 	 		RUN:cpu 		READY 			  1 			  1
+13  		WAITING 		DONE 	 		RUN:cpu 	 	READY 			  1 			  1
+14*  		RUN:io_done 	DONE 	 		DONE 	 		READY 			  1 			   	
+15  		RUN:io 		 	DONE 	 		DONE 			READY 			  1 			  
+16  		WAITING 		DONE 	 		DONE 	 		RUN:cup 		  1 			  1
+17  		WAITING 		DONE 	 		DONE 	 		RUN:cup 		  1 			  1
+18  		WAITING 		DONE 	 		DONE 	 		RUN:cup 		  1 			  1
+19  		WAITING 		DONE 	 		DONE 	 		RUN:cup 		  1 			  1
+20  		WAITING 		DONE 	 		DONE 	 	 	RUN:cup 		  1 			  1
+21*  		RUN:io_done 	DONE 	 		DONE 	 		DONE 			  1 			   	
+
+
+Stats: Total Time 21
+Stats: CPU Busy 21 (100.00%) 
+Stats: IO Busy 15 (71.43%)		  
+Remarks: System resources are utilized effectively since cpu was busy all the time IO system utilization was also very high.
+
+Understading from question 6, 7 is that since CPU and IO system in a computer system are two independent resources. So to utilize them effectively we need a scheduling policy that keeps both the system busy hence issue io requests before any cpu task and then immediately switch to cpu task and when io task completes immediately attend to it after finishing current cpu task.
+
+Q8: ./process-run.py -s 2 -l 3:50,3:50 -I IO_RUN_IMMEDIATE
+Process 0
+  io
+  io_done
+  io
+  io_done
+  cpu
+
+Process 1
+  cpu
+  io
+  io_done
+  io
+  io_done
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:io  		READY			  1
+ 2 			WAITING 		RUN:cpu 		  1 			  1
+ 3 			WAITING 		RUN:io 			  1 			  1
+ 4 			WAITING 		WAITING 						  1
+ 5 			WAITING 		WAITING 						  1
+ 6 			WAITING 		WAITING 						  1
+ 7* 		RUN:io_done		WAITING			  1 			  1
+ 8 			RUN:io 			WAITING 		  1 			  1
+ 9* 		WAITING 		RUN:io_done		  1 			  1
+10 			WAITING 		RUN:io 			  1 			  1
+11 			WAITING 		WAITING 						  1
+12 			WAITING 		WAITING 						  1
+13 			WAITING 		WAITING 						  1
+14*			RUN:io_done 	WAITING			  1 			  1
+15 			RUN:cpu 		WAITING 		  1 			  1
+16*			DONE 			RUN:io_done 	  1 			  
+
+Stats: Total Time 16
+Stats: CPU Busy 10 (62.50%) 
+Stats: IO Busy 14 (87.25%)
+
+./process-run.py -s 2 -l 3:50,3:50 -I IO_RUN_LATER
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:io  		READY			  1
+ 2 			WAITING 		RUN:cpu 		  1 			  1
+ 3 			WAITING 		RUN:io 			  1 			  1
+ 4 			WAITING 		WAITING 						  1
+ 5 			WAITING 		WAITING 						  1
+ 6 			WAITING 		WAITING 						  1
+ 7* 		RUN:io_done		WAITING			  1 			  1
+ 8 			RUN:io 			WAITING 		  1 			  1
+ 9* 		WAITING 		RUN:io_done		  1 			  1
+10 			WAITING 		RUN:io 			  1 			  1
+11 			WAITING 		WAITING 						  1
+12 			WAITING 		WAITING 						  1
+13 			WAITING 		WAITING 						  1
+14*			RUN:io_done 	WAITING			  1 			  1
+15 			RUN:cpu 		WAITING 		  1 			  1
+16*			DONE 			RUN:io_done 	  1 			  
+
+Stats: Total Time 16
+Stats: CPU Busy 10 (62.50%) 
+Stats: IO Busy 14 (87.25%)
+
+./process-run.py -s 2 -l 3:50,3:50 -S SWITCH_ON_IO
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:io  		READY			  1
+ 2 			WAITING 		RUN:cpu 		  1 			  1
+ 3 			WAITING 		RUN:io 			  1 			  1
+ 4 			WAITING 		WAITING 						  1
+ 5 			WAITING 		WAITING 						  1
+ 6 			WAITING 		WAITING 						  1
+ 7* 		RUN:io_done		WAITING			  1 			  1
+ 8 			RUN:io 			WAITING 		  1 			  1
+ 9* 		WAITING 		RUN:io_done		  1 			  1
+10 			WAITING 		RUN:io 			  1 			  1
+11 			WAITING 		WAITING 						  1
+12 			WAITING 		WAITING 						  1
+13 			WAITING 		WAITING 						  1
+14*			RUN:io_done 	WAITING			  1 			  1
+15 			RUN:cpu 		WAITING 		  1 			  1
+16*			DONE 			RUN:io_done 	  1 			  
+
+Stats: Total Time 16
+Stats: CPU Busy 10 (62.50%) 
+Stats: IO Busy 14 (87.25%)
+
+./process-run.py -s 2 -l 3:50,3:50 -S SWITCH_ON_END
+Time 		PID:0 			PID:1 			CPU				IOs
+ 1 			RUN:io  		READY			  1
+ 2 			WAITING 		READY	 		    			  1
+ 3 			WAITING 		READY 			    			  1
+ 4 			WAITING 		READY	 						  1
+ 5 			WAITING 		READY 							  1
+ 6 			WAITING 		READY 							  1
+ 7* 		RUN:io_done		READY			  1  			  
+ 8 			RUN:io 			READY 		 	  1  			  
+ 9  		WAITING 		READY			  	 			  1
+10 			WAITING 		READY 			  	 			  1
+11 			WAITING 		READY	 						  1
+12 			WAITING 		READY 							  1
+13 			WAITING 		READY 							  1
+14*			RUN:io_done 	READY			  1 			  
+15 			RUN:cpu 		READY 		 	  1 			  
+16			DONE 			RUN:cpu 	 	  1
+17			DONE 			RUN:io 		 	  1
+18			DONE 			WAITING				 		 	  1  			   			  
+19			DONE 			WAITING				 		 	  1  			   			  
+20			DONE 			WAITING				 		 	  1  			   			  
+21			DONE 			WAITING				 		 	  1  			   			  
+22			DONE 			WAITING				 		 	  1  			   			  
+23*			DONE 			RUN:io_done		  1  			   		
+24			DONE 			RUN:io 		 	  1
+25			DONE 			WAITING				 		 	  1  			   			  
+26			DONE 			WAITING				 		 	  1  			   			  
+27			DONE 			WAITING				 		 	  1  			   			  
+28			DONE 			WAITING				 		 	  1  			   			  
+29			DONE 			WAITING				 		 	  1  			   			  
+30*			DONE 			RUN:io_done		  1  			   			  
+
+Stats: Total Time 30
+Stats: CPU Busy 10 (33.33%) 
+Stats: IO Busy 20 (66.66%)
+
+
+
+
+
