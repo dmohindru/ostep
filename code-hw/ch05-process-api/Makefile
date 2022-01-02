@@ -2,10 +2,10 @@
 all: p1 p2 p3 p4 p5 p6 p7 p8
 
 clean:
- 	rm -f p1 p2 p3 p4 p5 p6 p7 p8
+	rm -rf p1 p2 p3 p4 p5 p6 p7 p8 *.dSYM
 
 p1: p1.c
-	gcc -g -o p1 p1.c -Wall
+	gcc -o p1 p1.c -Wall
 
 p2: p2.c
 	gcc -g -o p2 p2.c -Wall
