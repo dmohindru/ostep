@@ -170,5 +170,18 @@ In order to list all the exact actions that took place we need to have process t
 ./fork.py -s 1 -t
 
 
+Homework (code) exercises
+-------------------------
+Ans 1: Since both the process (child and parent) gets their own copy of code as well as data. So in child process value of x in child process is the initial value set in parent process. Whenever child and parent process modifies their own copies of x these changes remain local to these process only.
 
+Ans 2: Both parent and child share same file descriptors. When both child and parent writes concurrently to same file order in which content are written to a file is arbitrary
 
+Ans3: No we cannot maintain the order of execution of child and parent process without calling wait() since we don't have control on os scheduler.
+
+Ans4: Look at this wikipedia page for more comprehensive analysis for family of exec() functions.
+
+Ans5: wait() returns process id of a child process. wait() returns -1 in child process.
+
+Ans6: waitpid() is useful if we wish to wait for a particular child process.
+
+Ans7: All the outputs of printf's in child process are lot.
