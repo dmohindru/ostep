@@ -1,0 +1,65 @@
+HOW TO EFFICIENTLY VIRTUALIZE THE CPU WITH CONTROL
+The OS must virtualize the CPU in an efficient manner while retaining control over the system. To do so, both hardware and operating-system support will be required. The OS will often use a judicious bit of hard- ware support in order to accomplish its work effectively.
+
+6.1 Basic Technique: Limited Direct Execution
+---------------------------------------------
+To make a program run as fast as one might expect, not surprisingly OS developers came up with a technique, which we call limited direct execution.
+
+Thus, when the OS wishes to start a pro- gram running, it creates a process entry for it in a process list, allocates some memory for it, loads the program code into memory (from disk), lo- cates its entry point (i.e., the main() routine or something similar), jumps to it, and starts running the user’s code.
+
+But this approach gives rise to a few problems. 
+- The first is simple: if we just run a program, how can the OS make sure the program doesn’t do anything that we don’t want it to do.
+- The second: when we are running a process, how does the operating system stop it from running and switch to another process.
+
+6.2 Problem #1: Restricted Operations
+-------------------------------------
+Thus, the approach we take is to introduce a new processor mode, known as user mode; code that runs in user mode is restricted in what it can do.
+
+In contrast to user mode is kernel mode, which the operating system (or kernel) runs in. In this mode, code that runs can do what it likes, in- cluding privileged operations such as issuing I/O requests and executing all types of restricted instructions.
+
+To enable this, virtually all modern hard- ware provides the ability for user programs to perform a system call. Pioneered on ancient machines such as the Atlas [K+61,L78], system calls allow the kernel to carefully expose certain key pieces of functionality to user programs, such as accessing the file system, creating and destroy- ing processes, communicating with other processes, and allocating more memory.
+
+Thus the kernel must carefully control what code executes upon a trap.
+The kernel does so by setting up a trap table at boot time. When the machine boots up, it does so in privileged (kernel) mode, and thus is free to configure machine hardware as need be.
+
+The hardware assists the OS by providing different modes of execution. In user mode, applications do not have full access to hardware resources. In kernel mode, the OS has access to the full resources of the machine. Special instructions to trap into the kernel and return-from-trap back to user-mode programs are also provided, as well as instructions that allow the OS to tell the hardware where the trap table resides in memory.
+
+There are two phases in the limited direct execution (LDE) protocol.
+In the first (at boot time), the kernel initializes the trap table, and the
+CPU remembers its location for subsequent use.
+In the second (when running a process), the kernel sets up a fewthings
+(e.g., allocating a node on the process list, allocating memory) before using
+a return-from-trap instruction to start the execution of the process;
+
+
+6.3 Problem #2: Switching Between Processes
+-------------------------------------------
+THE CRUX: HOW TO REGAIN CONTROL OF THE CPU
+How can the operating system regain control of the CPU so that it can
+switch between processes?
+
+=> A Cooperative Approach: Wait For System Calls
+Systems like this often include an explicit yield system call, which does nothing except to transfer control to the OS so it can run other processes.
+Applications also transfer control to the OS when they do something illegal. For example, if an application divides by zero, or tries to access memory that it shouldn’t be able to access
+
+=> A Non-Cooperative Approach: The OS Takes Control
+Without some additional help from the hardware, it turns out the OS can’t
+do much at all when a process refuses to make system calls (or mistakes)
+and thus return control to the OS. 
+The answer turns out to be simple and was discovered by a number
+of people building computer systems many years ago: a timer interrupt
+Note that the hardware has some responsibility when an interrupt occurs,
+in particular to save enough of the state of the program that was
+running when the interrupt occurred such that a subsequent return-fromtrap
+instruction will be able to resume the running program correctly.
+
+Saving and Restoring Context
+If the decision is made to switch, the OS then executes a low-level
+piece of code which we refer to as a context switch.
+
+By switching stacks, the kernel enters the call to the switch code in the context of one process (the one that was interrupted) and returns in the context of another (the soon-to-be-executing one).
+
+
+
+
+

@@ -1,0 +1,156 @@
+THE CRUX: HOW TO DEVELOP SCHEDULING POLICY
+
+7.1 Workload Assumptions
+------------------------
+Before getting into the range of possible policies, let us first make a number of simplifying assumptions about the processes running in the system, sometimes collectively called the workload.
+
+We will make the following assumptions about the processes, sometimes called jobs, that are running in the system:
+1. Each job runs for the same amount of time.
+2. All jobs arrive at the same time.
+3. Once started, each job runs to completion.
+4. All jobs only use the CPU (i.e., they perform no I/O)
+5. The run-time of each job is known.
+
+7.2 Scheduling Metrics
+----------------------
+A metric is just something that we use to measure something, and there are a number of different metrics that make sense in scheduling.
+
+For now, however, let us also simplify our life by simply having a single
+metric: turnaround time.
+T_turnaround = T_completion - T_arrival
+
+7.3 First In, First Out (FIFO)
+------------------------------
+Themost basic algorithmwe can implement is known as First In, First Out (FIFO) scheduling or sometimes First Come, First Served (FCFS).
+
+7.4 Shortest Job First (SJF)
+----------------------------
+This new scheduling discipline is known as Shortest Job First (SJF), it runs the shortest job first, then the next shortest, and so on.
+
+7.5 Shortest Time-to-Completion First (STCF)
+--------------------------------------------
+To address this concern, we need to relax assumption 3 (that jobs must run to completion), so let’s do that. We also need some machinery within the scheduler itself.
+
+Fortunately, there is a scheduler which does exactly that: add preemption to SJF, known as the Shortest Time-to-Completion First (STCF) or Preemptive Shortest Job First (PSJF) scheduler [CK68].
+
+7.6 A New Metric: Response Time
+-------------------------------
+However, the introduction of time-shared machines changed all that. Now users would sit at a terminal and demand interactive performance from the system as well. And thus, a new metric was born: response time.
+
+T_response = T_firstrun - T_arrival
+
+We define response time as the time from when the job arrives in a system to the first time it is scheduled
+
+7.7 Round Robin
+---------------
+The basic
+idea is simple: instead of running jobs to completion, RR runs a job for a time slice (sometimes called a scheduling quantum) and then switches to the next job in the run queue. As you can see, the length of the time slice is critical for RR. The shorter it is, the better the performance of RR under the response-time metric. However, making the time slice too short is problematic: suddenly the cost of context switching will dominate overall performance.
+
+Note that the cost of context switching does not arise solely from the OS actions of saving and restoring a few registers. When programs run, they build up a great deal of state in CPU caches, TLBs, branch predictors, and other on-chip hardware. Switching to another job causes this state to be flushed and new state relevant to the currently-running job to be brought in, which may exact a noticeable performance cost [MB91].
+
+It is not surprising, then, that RR is indeed one of the worst policies if turnaround time is our metric.
+
+More generally, any policy (such as RR) that is fair, i.e., that evenly divides the CPU among active processes on a small time scale, will perform poorly on metrics such as turnaround time.
+
+7.8 Incorporating I/O
+---------------------
+A scheduler clearly has a decision to make when a job initiates an I/O request, because the currently-running job won’t be using the CPU during the I/O; it is blocked waiting for I/O completion.
+
+7.9 No More Oracle
+-------------------
+In fact, in a generalpurpose OS (like the oneswe care about), the OS usually knows very little about the length of each job. Thus, how canwe build an approach that behaves like SJF/STCF without such a priori knowledge?
+
+
+Homework exercises
+------------------
+Q1: ./scheduler.py -p SJF -l 200,200,200
+Execution trace:
+[time 	0] Run job 0 for 200.00 sec (DONE at 200.00)
+[time 200] Run job 1 for 200.00 sec (DONE at 400.00)
+[time 400] Run job 2 for 200.00 sec (DONE at 600.00)
+
+Final statistics:
+Job 0 -- Response: 	  0.00 	Turnaround:	200.00 		Wait:   0.0
+Job 1 -- Response:	200.00 	Turnaround:	400.00 		Wait: 200.0
+Job 2 -- Response: 	400.00 	Turnaround:	600.00 		Wait: 400.0
+
+Average -- Response: 200.00 	Turnaround: 400.00 		Wati: 200.00
+
+./scheduler.py -p FIFO -l 200,200,200
+Execution trace:
+[time 	0] Run job 0 for 200.00 sec (DONE at 200.00)
+[time 200] Run job 1 for 200.00 sec (DONE at 400.00)
+[time 400] Run job 2 for 200.00 sec (DONE at 600.00)
+
+Final statistics:
+Job 0 -- Response: 	  0.00 	Turnaround:	200.00 		Wait:   0.0
+Job 1 -- Response:	200.00 	Turnaround:	400.00 		Wait: 200.0
+Job 2 -- Response: 	400.00 	Turnaround:	600.00 		Wait: 400.0
+
+Average -- Response: 200.00 	Turnaround: 400.00 		Wati: 200.00
+
+Q2: ./scheduler.py -p SJF -l 300,100,200
+Execution trace:
+[time 	0] Run job 1 for 100.00 sec (DONE at 100.00)
+[time 100] Run job 2 for 200.00 sec (DONE at 300.00)
+[time 300] Run job 0 for 300.00 sec (DONE at 600.00)
+
+Final statistics:
+Job 0 -- Response: 	300.00 	Turnaround:	600.00 		Wait: 300.0
+Job 1 -- Response:	  0.00 	Turnaround:	100.00 		Wait:   0.0
+Job 2 -- Response: 	100.00 	Turnaround:	300.00 		Wait: 100.0
+
+Average -- Response: 133.33 	Turnaround: 333.33 		Wati: 133.33
+
+ ./scheduler.py -p FIFO -l 300,100,200
+Execution trace:
+[time 	0] Run job 0 for 300.00 sec (DONE at 300.00)
+[time 300] Run job 1 for 100.00 sec (DONE at 400.00)
+[time 400] Run job 2 for 200.00 sec (DONE at 600.00)
+
+Final statistics:
+Job 0 -- Response: 	  0.00 	Turnaround:	300.00 		Wait:   0.0
+Job 1 -- Response:	300.00 	Turnaround:	400.00 		Wait: 300.0
+Job 2 -- Response: 	400.00 	Turnaround:	600.00 		Wait: 400.0
+
+Average -- Response: 233.33 	Turnaround: 433.33 		Wati: 233.33
+
+Q3: ./scheduler.py -p RR -q 1 -l 300,100,200
+Execution trace:
+[time 	0] Run job 0 for 1.00 sec 
+[time 	1] Run job 1 for 1.00 sec 
+[time 	2] Run job 2 for 1.00 sec
+[time 	3] Run job 0 for 1.00 sec 
+[time 	4] Run job 1 for 1.00 sec 
+[time 	5] Run job 2 for 1.00 sec
+...
+[time 298] Run job 1 for 1.00 sec (DONE at 299.00)
+...
+[time 499] Run job 2 for 1.00 sec (DONE at 500.00)
+...
+[time 599] Run job 0 for 1.00 sec (DONE at 600.00)
+
+Final statistics:
+Job 0 -- Response: 	  0.00 	Turnaround:	600.00 		Wait: 300.0
+Job 1 -- Response:	  1.00 	Turnaround:	299.00 		Wait: 199.0
+Job 2 -- Response: 	  2.00 	Turnaround:	500.00 		Wait: 300.0
+
+Average -- Response:  1.00 	Turnaround: 466.33 		Wati: 266.33
+
+
+Q4: For same lenght of jobs
+
+Q5: Job lenght same and quantam size equal to job length
+
+Q6: Response time increases
+./scheduler.py -p SJF -l 100,100,100
+Average -- Response: 100.00  Turnaround 200.00  Wait 100.00
+./scheduler.py -p SJF -l 200,200,200
+Average -- Response: 200.00  Turnaround 400.00  Wait 200.00
+
+Q7: Response time also increases
+q: quantam
+n: number of jobs
+Formula: (q * (n - 1) * n) / (n * 2)
+Simplying
+q * (n - 1) / 2
