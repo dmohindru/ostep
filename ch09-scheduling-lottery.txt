@@ -1,0 +1,86 @@
+Proportional-share is based around a simple concept: instead of optimizing for turnaround or response time, a scheduler might instead try to guarantee that each job obtain a certain percentage of CPU time.
+
+9.1 Basic Concept: Tickets Represent Your Share
+-----------------------------------------------
+The percent of tickets that a process has represents its share of the system resource in question. Lottery scheduling achieves this probabilistically (but not deterministically) by holding a lottery every so often (say, every time slice).
+
+9.2 Ticket Mechanisms
+---------------------
+One way is with the concept of ticket currency. Currency allows a user with a set of tickets to allocate tickets among their own jobs in whatever currency they would like; the system then automatically converts said currency into the correct global value.
+
+Another useful mechanism is ticket transfer. With transfers, a process can temporarily hand off its tickets to another process. This ability is especially useful in a client/server setting, where a client process sends a message to a server asking it to do some work on the client’s behalf. To speed up the work, the client can pass the tickets to the server and thus try to maximize the performance of the server while the server is handling the client’s request. When finished, the server then transfers the tickets back to the client and all is as before.
+
+Finally, ticket inflation can sometimes be a useful technique. With inflation, a process can temporarily raise or lower the number of tickets it owns. Of course, in a competitive scenario with processes that do not trust one another, this makes little sense; one greedy process could give itself a vast number of tickets and take over themachine. Rather, inflation can be applied in an environment where a group of processes trust one another;
+
+9.3 Implementation
+------------------
+Probably the most amazing thing about lottery scheduling is the simplicity of its implementation. All you need is a good random number generator to pick the winning ticket, a data structure to track the processes of the system (e.g., a list), and the total number of tickets.
+
+9.4 An Example
+--------------
+In this scenario, we’d like for each job to finish at roughly the same time, but due to the randomness of lottery scheduling, sometimes one job finishes before the other. To quantify this difference, we define a simple fairnessmetric, F which is simply the time the first job completes divided by the time that the second job completes.
+
+9.5 How To Assign Tickets?
+--------------------------
+One problem we have not addressed with lottery scheduling is: how to assign tickets to jobs? One approach is to assume that the users know best; in such a case, each user is handed some number of tickets, and a user can allocate tickets to any jobs they run as desired. However, this solution is a nonsolution: it really doesn’t tell you what to do. Thus, given a set of jobs, the “ticket-assignment problem” remains open.
+
+9.6 Stride Scheduling
+---------------------
+Stride scheduling is also straightforward. Each job in the system has a stride, which is inverse in proportion to the number of tickets it has. In our example above, with jobs A, B, and C, with 100, 50, and 250 tickets, respectively, we can compute the stride of each by dividing some large number by the number of tickets each process has been assigned. For example, if we divide 10,000 by each of those ticket values, we obtain the following stride values for A, B, and C: 100, 200, and 40. We call this value the stride of each process; every time a process runs, we will increment a counter for it (called its pass value) by its stride to track its global progress.
+
+9.7 The Linux Completely Fair Scheduler (CFS)
+---------------------------------------------
+Basic Operation
+Whereas most schedulers are based around the concept of a fixed time slice, CFS operates a bit differently. Its goal is simple: to fairly divide a CPU evenly among all competing processes. It does so through a simple counting-based technique known as virtual runtime (vruntime).
+
+The tension here is clear: if CFS switches too often, fairness is increased, as CFS will ensure that each process receives its share of CPU even over miniscule time windows, but at the cost of performance (too much context switching); if CFS switches less often, performance is increased (reduced context switching), but at the cost of near-term fairness.
+
+Weighting (Niceness)
+CFS also enables controls over process priority, enabling users or administrators to give some processes a higher share of the CPU. It does this not with tickets, but through a classic UNIX mechanism known as the nice level of a process.
+
+Using Red-Black Trees
+One major focus of CFS is efficiency, as stated above. For a scheduler, there are many facets of efficiency, but one of them is as simple as this: when the scheduler has to find the next job to run, it should do so as quickly as possible. Simple data structures like lists don’t scale: modern systems sometimes are comprised of 1000s of processes, and thus searching through a long-list every so many milliseconds is wasteful. CFS addresses this by keeping processes in a red-black tree [B72].
+
+Dealing With I/O And Sleeping Processes
+One problem with picking the lowest vruntime to run next arises with jobs that have gone to sleep for a long period of time. Imagine two processes, A and B, one of which (A) runs continuously, and the other (B) which has gone to sleep for a long period of time (say, 10 seconds). When B wakes up, its vruntime will be 10 seconds behind A’s, and thus (if we’re not careful), B will now monopolize the CPU for the next 10 seconds while it catches up, effectively starving A.
+
+Homework Exercises
+------------------
+Q1:
+./lottery.py -s 1
+** Solutions **
+Random 651593 -> Winning ticket 119 (of 153) -> Run 2
+  Jobs:  (  job:0 timeleft:1 tix:84 ) (  job:1 timeleft:7 tix:25 ) (* job:2 timeleft:4 tix:44 )
+Random 788724 -> Winning ticket   9 (of 153) -> Run 0
+  Jobs:  (* job:0 timeleft:1 tix:84 ) (  job:1 timeleft:7 tix:25 ) (  job:2 timeleft:3 tix:44 )
+--> JOB 0 DONE at time 2
+Random  93859 -> Winning ticket  19 (of  69) -> Run 1
+  Jobs:  (  job:0 timeleft:0 tix:---) (* job:1 timeleft:7 tix:25 ) (  job:2 timeleft:3 tix:44 )
+Random  28347 -> Winning ticket  57 (of  69) -> Run 2
+  Jobs:  (  job:0 timeleft:0 tix:---) (  job:1 timeleft:6 tix:25 ) (* job:2 timeleft:3 tix:44 )
+Random 835765 -> Winning ticket  37 (of  69) -> Run 2
+  Jobs:  (  job:0 timeleft:0 tix:---) (  job:1 timeleft:6 tix:25 ) (* job:2 timeleft:2 tix:44 )
+Random 432767 -> Winning ticket  68 (of  69) -> Run 2
+  Jobs:  (  job:0 timeleft:0 tix:---) (  job:1 timeleft:6 tix:25 ) (* job:2 timeleft:1 tix:44 )
+--> JOB 1 DONE at time 6
+Random 762280 -> Winning ticket   5 (of  25) -> Run 1
+  Jobs:  (  job:0 timeleft:0 tix:---) (* job:1 timeleft:6 tix:25 ) (  job:2 timeleft:0 tix:---)
+Random   2106 -> Winning ticket   6 (of  25) -> Run 1
+  Jobs:  (  job:0 timeleft:0 tix:---) (* job:1 timeleft:5 tix:25 ) (  job:2 timeleft:0 tix:---)
+Random 445387 -> Winning ticket  12 (of  25) -> Run 1
+  Jobs:  (  job:0 timeleft:0 tix:---) (* job:1 timeleft:4 tix:25 ) (  job:2 timeleft:0 tix:---)
+Random 721540 -> Winning ticket  15 (of  25) -> Run 1
+  Jobs:  (  job:0 timeleft:0 tix:---) (* job:1 timeleft:3 tix:25 ) (  job:2 timeleft:0 tix:---)
+Random 228762 -> Winning ticket  12 (of  25) -> Run 1
+  Jobs:  (  job:0 timeleft:0 tix:---) (* job:1 timeleft:2 tix:25 ) (  job:2 timeleft:0 tix:---)
+Random 945271 -> Winning ticket  21 (of  25) -> Run 1
+  Jobs:  (  job:0 timeleft:0 tix:---) (* job:1 timeleft:1 tix:25 ) (  job:2 timeleft:0 tix:---)
+--> JOB 1 DONE at time 12
+
+./lottery.py -s 2
+** Solutions **
+
+
+
+
+

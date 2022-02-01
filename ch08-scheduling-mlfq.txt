@@ -1,0 +1,141 @@
+The fundamental problem MLFQ tries to address is two-fold. First, it would like to optimize turnaround time, which, as we saw in the previous note, is done by running shorter jobs first; Second, MLFQ would like to make a system feel responsive to interactive users (i.e., users sitting and staring at the screen, waiting for a process to finish), and thus minimize response time;
+
+8.1 MLFQ: Basic Rules
+---------------------
+The MLFQ has a number of distinct queues, each assigned a different priority level. Of course, more than one job may be on a given queue, and thus have the same priority. In this case, we will just use round-robin scheduling among those jobs.
+
+Thus, we arrive at the first two basic rules for MLFQ:
+• Rule 1: If Priority(A) > Priority(B), A runs (B doesn’t).
+• Rule 2: If Priority(A) = Priority(B), A & B run in RR.
+
+Rather than giving a fixed priority to each job, MLFQ varies the priority of a job based on its observed behavior.
+
+8.2 Attempt #1: How To Change Priority
+--------------------------------------
+We now must decide how MLFQ is going to change the priority level of a job
+
+• Rule 3: When a job enters the system, it is placed at the highest priority (the topmost queue).
+• Rule 4a: If a job uses up an entire time slice while running, its priority is reduced (i.e., it moves down one queue).
+• Rule 4b: If a job gives up the CPU before the time slice is up, it stays at the same priority level.
+
+8.3 Attempt #2: The Priority Boost
+----------------------------------
+What could we do in order to guarantee that CPU-bound jobs will make some progress (even if it is not much?)
+The simple idea here is to periodically boost the priority of all the jobs in system.
+
+• Rule 5: After some time period S, move all the jobs in the system to the topmost queue.
+
+8.4 Attempt #3: Better Accounting
+---------------------------------
+We now have one more problem to solve: how to prevent gaming of our scheduler?
+
+The solution here is to perform better accounting of CPU time at each level of the MLFQ. Instead of forgetting how much of a time slice a process used at a given level, the scheduler should keep track; once a process has used its allotment, it is demoted to the next priority queue. Whether it uses the time slice in one long burst ormany small ones does notmatter.
+
+• Rule 4: Once a job uses up its time allotment at a given level (regardless of how many times it has given up the CPU), its priority is reduced (i.e., it moves down one queue).
+
+8.5 Tuning MLFQ And Other Issues
+--------------------------------
+A few other issues arise with MLFQ scheduling. One big question is how to parameterize such a scheduler. For example, how many queues should there be? How big should the time slice be per queue? How often should priority be boosted in order to avoid starvation and account for changes in behavior?
+
+Most MLFQ variants allow for varying time-slice length across different queues. The high-priority queues are usually given short time slices; they are comprised of interactive jobs, after all, and thus quickly alternating between them makes sense (e.g., 10 or fewer milliseconds). The low-priority queues, in contrast, contain long-running jobs that are CPU-bound; hence, longer time slices work well (e.g., 100s of ms).
+
+Homework Exercises
+------------------
+Q1: ./mlfq.py -l 0,15,0:0,20,0 -Q 5,10
+
+Here is the list of inputs:
+OPTIONS jobs 2
+OPTIONS queues 2
+OPTIONS allotments for queue  1 is   1
+OPTIONS quantum length for queue  1 is   5
+OPTIONS allotments for queue  0 is   1
+OPTIONS quantum length for queue  0 is  10
+OPTIONS boost 0
+OPTIONS ioTime 5
+OPTIONS stayAfterIO False
+OPTIONS iobump False
+
+Job List:
+  Job  0: startTime   0 - runTime  15 - ioFreq   0
+  Job  1: startTime   0 - runTime  20 - ioFreq   0
+
+[ time 0 ] JOB BEGINS by JOB 0
+[ time 0 ] JOB BEGINS by JOB 1
+[ time 0 ] Run JOB 0 at PRIORITY 1 [ TICKS 4 ALLOT 1 TIME 14 (of 15) ]
+[ time 1 ] Run JOB 0 at PRIORITY 1 [ TICKS 3 ALLOT 1 TIME 13 (of 15) ]
+[ time 2 ] Run JOB 0 at PRIORITY 1 [ TICKS 2 ALLOT 1 TIME 12 (of 15) ]
+[ time 3 ] Run JOB 0 at PRIORITY 1 [ TICKS 1 ALLOT 1 TIME 11 (of 15) ]
+[ time 4 ] Run JOB 0 at PRIORITY 1 [ TICKS 0 ALLOT 1 TIME 10 (of 15) ]
+[ time 5 ] Run JOB 1 at PRIORITY 1 [ TICKS 4 ALLOT 1 TIME 19 (of 20) ]
+[ time 6 ] Run JOB 1 at PRIORITY 1 [ TICKS 3 ALLOT 1 TIME 18 (of 20) ]
+[ time 7 ] Run JOB 1 at PRIORITY 1 [ TICKS 2 ALLOT 1 TIME 17 (of 20) ]
+[ time 8 ] Run JOB 1 at PRIORITY 1 [ TICKS 1 ALLOT 1 TIME 16 (of 20) ]
+[ time 9 ] Run JOB 1 at PRIORITY 1 [ TICKS 0 ALLOT 1 TIME 15 (of 20) ]
+[ time 10] Run JOB 0 at PRIORITY 0 [ TICKS 9 ALLOT 1 TIME  9 (of 15) ]
+[ time 11] Run JOB 0 at PRIORITY 0 [ TICKS 8 ALLOT 1 TIME  8 (of 15) ]
+[ time 12] Run JOB 0 at PRIORITY 0 [ TICKS 7 ALLOT 1 TIME  7 (of 15) ]
+[ time 13] Run JOB 0 at PRIORITY 0 [ TICKS 6 ALLOT 1 TIME  6 (of 15) ]
+[ time 14] Run JOB 0 at PRIORITY 0 [ TICKS 5 ALLOT 1 TIME  5 (of 15) ]
+[ time 15] Run JOB 0 at PRIORITY 0 [ TICKS 4 ALLOT 1 TIME  4 (of 15) ]
+[ time 16] Run JOB 0 at PRIORITY 0 [ TICKS 3 ALLOT 1 TIME  3 (of 15) ]
+[ time 17] Run JOB 0 at PRIORITY 0 [ TICKS 2 ALLOT 1 TIME  2 (of 15) ]
+[ time 18] Run JOB 0 at PRIORITY 0 [ TICKS 1 ALLOT 1 TIME  1 (of 15) ]
+[ time 19] Run JOB 0 at PRIORITY 0 [ TICKS 0 ALLOT 1 TIME  0 (of 15) ]
+[ time 20] FINISHED JOB 0
+[ time 20] Run JOB 1 at PRIORITY 0 [ TICKS 9 ALLOT 1 TIME 14 (of 20) ]
+[ time 21] Run JOB 1 at PRIORITY 0 [ TICKS 8 ALLOT 1 TIME 13 (of 20) ]
+[ time 22] Run JOB 1 at PRIORITY 0 [ TICKS 7 ALLOT 1 TIME 12 (of 20) ]
+[ time 23] Run JOB 1 at PRIORITY 0 [ TICKS 6 ALLOT 1 TIME 11 (of 20) ]
+[ time 24] Run JOB 1 at PRIORITY 0 [ TICKS 5 ALLOT 1 TIME 10 (of 20) ]
+[ time 25] Run JOB 1 at PRIORITY 0 [ TICKS 4 ALLOT 1 TIME  9 (of 20) ]
+[ time 26] Run JOB 1 at PRIORITY 0 [ TICKS 3 ALLOT 1 TIME  8 (of 20) ]
+[ time 27] Run JOB 1 at PRIORITY 0 [ TICKS 2 ALLOT 1 TIME  7 (of 20) ]
+[ time 28] Run JOB 1 at PRIORITY 0 [ TICKS 1 ALLOT 1 TIME  6 (of 20) ]
+[ time 29] Run JOB 1 at PRIORITY 0 [ TICKS 0 ALLOT 1 TIME  5 (of 20) ]
+[ time 30] Run JOB 1 at PRIORITY 0 [ TICKS 9 ALLOT 1 TIME  4 (of 20) ]
+[ time 31] Run JOB 1 at PRIORITY 0 [ TICKS 8 ALLOT 1 TIME  3 (of 20) ]
+[ time 32] Run JOB 1 at PRIORITY 0 [ TICKS 7 ALLOT 1 TIME  2 (of 20) ]
+[ time 33] Run JOB 1 at PRIORITY 0 [ TICKS 6 ALLOT 1 TIME  1 (of 20) ]
+[ time 34] Run JOB 1 at PRIORITY 0 [ TICKS 5 ALLOT 1 TIME  0 (of 20) ]
+[ time 35] FINISHED JOB 1
+
+Final statistics:
+  Job  0: startTime   0 - response   0 - turnaround 20
+  Job  1: startTime   0 - response   5 - turnaround 35
+
+
+  Avg  2: startTime n/a - response 2.50 - turnaround 27.50
+
+Q2: 
+Example 1: (Figure 8.2) 
+./mlfq.py -l 0,200,0 -Q 10,10,10 -c
+
+Example 2: (Figure 8.3)
+./mlfq.py -l 0,200,0:100,20,0 -Q 10,10,10 -c
+
+Example 3: (Figure 8.4)
+./mlfq.py -l 0,200,0:40,25,1 -i 5 -Q 10,10,10 -S -c
+
+Example 4: (Figure 8.5) Without Priority Boost
+./mlfq.py -l 0,200,0:100,100,9:100,100,9 -i 1 -Q 10,10,10 -S -c
+
+(Figure 8.5) With Priority Boost
+./mlfq.py -l 0,200,0:100,100,9:100,100,9 -i 1 -Q 10,10,10 -S -B 100 -c
+
+Example 5: (Figure 8.6) Without Game Tolerance
+./mlfq.py -l 0,200,0:100,100,9:100,100,9 -i 2 -Q 10,10,10 -S -c
+
+(Figure 8.6) With Game Tolerance
+./mlfq.py -l 0,200,0:100,100,9:100,100,9 -i 2 -Q 10,10,10 -c
+
+Example 6: (Figure 8.7)
+./mlfq.py -l 0,300,0:8,300,0 -Q 10,20,40 -A 2,4,4 -c
+
+Q3: By have only one queue
+./mlfq.py -l 0,100,0:0,100,0 -n 1 -c
+
+Q4: ./mlfq.py -l 0,50,0:0,50,9 -i 1 -Q 10,10,10 -S -c
+
+Q5: 5 % of 200 ms = 10 ms
+
+Q6: ./mlfq.py -l 0,50,2:0,50,2:0,200,0 -i 1 -Q 10,10,10 -S -I -c 
