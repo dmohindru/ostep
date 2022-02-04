@@ -1,0 +1,14 @@
+CRUX: HOW TO SCHEDULE JOBS ON MULTIPLE CPUS
+How should the OS schedule jobs on multiple CPUs? What new problems arise? Do the same old techniques work, or are new ideas required?
+
+10.1 Background: Multiprocessor Architecture
+--------------------------------------------
+To understand the new issues surrounding multiprocessor scheduling, we have to understand a new and fundamental difference between single-CPU hardware and multi-CPU hardware. This difference centers around the use of hardware caches (e.g., Figure 10.1), and exactly how data is shared across multiple processors.
+
+10.2 Don’t Forget Synchronization
+---------------------------------
+When accessing (and in particular, updating) shared data items or structures across CPUs,mutual exclusion primitives (such as locks) should likely be used to guarantee correctness (other approaches, such as building lock-free data structures, are complex and only used on occasion;
+
+10.3 One Final Issue: Cache Affinity
+------------------------------------
+One final issue arises in building a multiprocessor cache scheduler, known as cache affinity [TTG95]. This notion is simple: a process, when run on a particular CPU, builds up a fair bit of state in the caches (and TLBs) of the CPU. The next time the process runs, it is often advantageous to run it on the same CPU, as it will run faster if some of its state is already present in the caches on that CPU.
