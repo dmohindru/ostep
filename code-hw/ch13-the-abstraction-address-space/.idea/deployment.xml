@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="Remote Host (6434da1a-fd39-42e5-8bdc-271f649c1784)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/dhruv/Programming/ostep" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="Remote Host (ba178e87-e069-482d-a6dc-cbe6a4aef5e1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/tmp/tmp.xWgefyVVwQ" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

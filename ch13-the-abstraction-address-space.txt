@@ -1,0 +1,58 @@
+13.1 Early Systems
+------------------
+From the perspective of memory, early machines didn’t provide much of an abstraction to users
+
+13.2 Multiprogramming and Time Sharing
+--------------------------------------
+After a time, because machines were expensive, people began to share machines more effectively. Thus the era of multiprogramming was born [DV66], in which multiple processes were ready to run at a given time, and the OS would switch between them, for example when one decided to perform an I/O.
+
+Soon enough, however, people began demanding more of machines, and the era of time sharing was born. The notion of interactivity became important, as many users might be concurrently using a machine, each waiting for (or hoping for) a timely response from their currently-executing tasks.
+
+One way to implement time sharing would be to run one process for a short while, giving it full access to all memory (Figure 13.1), then stop it, save all of its state to some kind of disk (including all of physical memory), load some other process’s state, run it for a while, and thus implement some kind of crude sharing of the machine. Unfortunately, this approach has a big problem: it is way too slow.
+
+Second approach: we’d rather do is leave processes in memory while switching between them, allowing the OS to implement time sharing efficiently.
+
+13.3 The Address Space
+----------------------
+However, we have to keep those pesky users in mind, and doing so requires the OS to create an easy to use abstraction of physical memory. We call this abstraction the address space, and it is the running program’s view of memory in the system. Understanding this fundamental OS abstraction of memory is key to understanding how memory is virtualized.
+
+Of course, when we describe the address space, what we are describing is the abstraction that the OS is providing to the running program. The programreally isn’t inmemory at physical addresses 0 through 16KB; rather it is loaded at some arbitrary physical address(es).
+
+When, for example, process A in Figure 13.2 tries to perform a load at address 0 (which we will call a virtual address), somehow the OS, in tandem with some hardware support, will have to make sure the load doesn’t actually go to physical address 0 but rather to physical address 320KB (where A is loaded into memory). This is the key to virtualization of memory,which underlies everymodern computer systemin theworld.
+
+13.4 Goals
+----------
+One major goal of a virtual memory (VM) system is transparency2. The OS should implement virtual memory in a way that is invisible to the running program. Thus, the program shouldn’t be aware of the fact that memory is virtualized; rather, the program behaves as if it has its own private physical memory.
+
+Another goal of VM is efficiency. The OS should strive to make the virtualization as efficient as possible, both in terms of time (i.e., not making programs run much more slowly) and space (i.e., not using too much memory for structures needed to support virtualization).
+
+Finally, a third VM goal is protection. The OS should make sure to protect processes from one another as well as the OS itself from processes.
+
+Homework Exercises
+------------------
+
+Q1:
+DONE
+
+Q2:
+Total: 971 MB
+Available: 571 MB
+
+Q3:
+refer to files in ./code-hw/ch13-the-abstraction-address-space
+
+Q4:
+Total: 971 MB
+Available: 284 MB
+
+Q5:
+DONE
+
+Q6:
+YES
+
+Q7:
+heap/code (libc code + linker code)/ stack / vvar / vdso / vsyscall
+
+Q8:
+YES it does

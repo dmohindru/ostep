@@ -12,3 +12,120 @@ When accessing (and in particular, updating) shared data items or structures acr
 10.3 One Final Issue: Cache Affinity
 ------------------------------------
 One final issue arises in building a multiprocessor cache scheduler, known as cache affinity [TTG95]. This notion is simple: a process, when run on a particular CPU, builds up a fair bit of state in the caches (and TLBs) of the CPU. The next time the process runs, it is often advantageous to run it on the same CPU, as it will run faster if some of its state is already present in the caches on that CPU.
+
+
+10.4 Single-Queue Scheduling
+------------------------------
+The most basic approach is to simply reuse the basic framework for single processor scheduling, by putting all jobs that need to be scheduled into a single queue; we call this single-queue multiprocessor scheduling or SQMS for short. This approach has the advantage of simplicity;
+
+The first problemis a lack of scalability. To ensure the scheduler works correctly on multiple CPUs, the developers will have inserted some form of locking into the code, as described above.
+
+The second main problem with SQMS is cache affinity.
+
+10.5 Multi-Queue Scheduling
+---------------------------
+Because of the problems caused in single-queue schedulers, some systems opt for multiple queues, e.g., one per CPU. We call this approach multi-queue multiprocessor scheduling (orMQMS).
+
+MQMS has a distinct advantage of SQMS in that it should be inherently more scalable. As the number of CPUs grows, so too does the number of queues, and thus lock and cache contention should not become a central problem. In addition, MQMS intrinsically provides cache affinity; jobs stay on the same CPU and thus reap the advantage of reusing cached contents therein. We have a new problem, which is fundamental in the multi-queue based approach: load imbalance.
+
+10.6 Linux Multiprocessor Schedulers
+------------------------------------
+Interestingly, in the Linux community, no common solution has approached to building a multiprocessor scheduler. Over time, three different schedulers arose: the O1) scheduler, the Completely Fair Schedule (CFS), and the BF Scheduler (BFS).
+
+Homework Exercises
+------------------
+Q1: ./multi.py -n 1 -L a:30:200
+
+Finish time 30
+CPU 0 utilization 100.00 [ warm 0.00 ]
+
+Q2: ./multi.py -n 1 -L a:30:200 -M 300
+
+Finish time 20
+CPU 0 utilization 100.00 [ warm 50.00 ]
+
+Q3: 
+When a cache is cold only 1 tick of job's runtime is subtracted from its remaining time left per each tick of the clock.
+When a cache is warm 2 tick (or whatever specified by -r flag) of job's runtime is subtracted from its remaining time left per each tick of the clock.
+
+Q4:
+Cache warm up at time 10 during job run. If we decreare cache warm up time job will finish execution quicker and vice a versa if we increase cache warm up time.
+
+Q5:
+./multi.py -n 2 -L a:100:100,b:100:50,c:100:50
+
+Finish time 150
+Per-CPU stats
+CPU 0 utilization 100.00 [ warm 0.00]
+CPU 1 utilization 100.00 [ warm 0.00]
+
+With round-robin centralized scheduler as there was no CPU affinity hence cache never got warm and jobs were executed only 1x time per clock tick.
+
+Q6:
+./multi.py -n 2 -L a:100:100,b:100:50,c:100:50 -A a:0,b:1,c:1
+
+Finish time: 110
+
+Per-CPU stats
+CPU 0 utilization 50.00  [ warm 40.90]
+CPU 1 utilization 100.00 [ warm 81.82]
+
+Any other combination of jobs will only run slower as the sum of their working set size will always be larger than cache size of any CPU.
+
+Q7:
+
+./multi.py -n 1 -L a:100:100,b:100:100,c:100:100 -M 50
+Finish Time: 300
+
+./multi.py -n 2 -L a:100:100,b:100:100,c:100:100 -M 50
+Finish Time: 150
+
+./multi.py -n 3 -L a:100:100,b:100:100,c:100:100 -M 50
+Finish Time: 100
+
+Summary
+No of CPU 	|	Finish Time 	| Improvement Factor
+-----------------------------------------------------
+ 1 			|		300			| 		--------
+ 2 			|		150			| 		2.00
+ 3 			|		100			| 		3.00
+
+
+
+
+./multi.py -n 1 -L a:100:100,b:100:100,c:100:100 -M 100
+Finish Time: 300
+
+./multi.py -n 2 -L a:100:100,b:100:100,c:100:100 -M 100
+Finish Time: 150
+
+./multi.py -n 3 -L a:100:100,b:100:100,c:100:100 -M 100
+Finish Time: 55
+
+Summary
+No of CPU 	|	Finish Time 	| Improvement Factor
+-----------------------------------------------------
+ 1 			|		300			| 		--------
+ 2 			|		150			| 		2.00
+ 3 			|		 55			| 		5.45
+
+ Q8:
+./multi.py -n 2 -L a:100:100,b:100:50,c:100:50 -p
+
+Finish time: 100
+
+Per-CPU stats
+CPU 0 utilization  75.00 [ warm 55.00]
+CPU 1 utilization 100.00 [ warm 80.00]
+
+In this case reducing peak interval will not have any advantage because job a completed almost near the time period which is multiple of 30. However reducing peak interval will definitely be benefical till then peak time not less than quantam time of a cpu.
+
+Q9:
+
+
+
+
+
+
+
+

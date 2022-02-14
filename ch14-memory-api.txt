@@ -1,0 +1,61 @@
+14.1 Types of Memory
+--------------------
+In running a C program, there are two types of memory that are allocated. The first is called stack memory, and allocations and deallocations of it are managed implicitly by the compiler for you, the programmer; for this reason it is sometimes called automatic memory.
+It is this need for long-lived memory that gets us to the second type of memory, called heap memory, where all allocations and deallocations are explicitly handled by you, the programmer.
+
+14.2 The malloc() Call
+----------------------
+The malloc() call is quite simple: you pass it a size asking for some room on the heap, and it either succeeds and gives you back a pointer to the newly-allocated space, or fails and returns NULL.
+
+14.3 The free() Call
+--------------------
+As it turns out, allocating memory is the easy part of the equation; knowing when, how, and even if to free memory is the hard part. To free heap memory that is no longer in use, programmers simply call free().
+
+14.4 Common Errors
+------------------
+Correct memory management has been such a problem, in fact, that many newer languages have support for automatic memory management. In such languages, while you call something akin to malloc() to allocate memory (usually new or something similar to allocate a new object), you never have to call something to free space; rather, a garbage collector runs and figures out what memory you no longer have references to and frees it for you.
+
+- Not Allocating Enough Memory
+- Forgetting to Initialize Allocated Memory
+- Forgetting To Free Memory
+- Freeing Memory Before You Are Done With It
+- Freeing Memory Repeatedly
+- Calling free() Incorrectly
+
+Because of frequent errors with memory, a whole ecosphere of tools have developed tohelp find such problems in your code. Check out both purify [HJ92] and valgrind [SN05]; both are excellent at helping you locate the source of your memory-related problems.
+
+14.5 Underlying OS Support
+--------------------------
+You might have noticed that we haven’t been talking about system calls when discussing malloc() and free(). The reason for this is simple: they are not system calls, but rather library calls. One such system call is called brk, which is used to change the location of the program’s break: the location of the end of the heap. Finally, you can also obtainmemory from the operating systemvia the mmap() call. By passing in the correct arguments, mmap() can create an anonymous memory region within your program
+
+14.6 Other Calls
+----------------
+There are a few other calls that the memory-allocation library supports. For examp le, calloc() allocates memory and also zeroes it before returning; this prevents some errors where you assume that memory is zeroed and forget to initialize it yourself
+
+The routine realloc() can also be useful, when you’ve allocated space for something (say, an array), and then need to add something to it: realloc() makes a new larger region of memory, copies the old region into it, and returns the pointer to the new region.
+
+Home work exercises
+-------------------
+Q2:
+Program received signal SIGSEGV, Segmentation fault.
+0x0000555555555144 in main (argc=1, argv=0x7fffffffe4b8) at null.c:8
+8           int val = *p;
+
+Q3:
+Yes
+
+Q4:
+gdb cannot detect memory leak
+valgrind can detect memory leak
+
+Q5:
+When we run this program it terminates normally.
+Valgrind is able to detect invalid write to memory address array[100]
+
+Q6:
+Program terminates properly. However value printed of an array element is not valid.
+Valgrind identifies invalid memory read to an unallocated block of memory.
+
+Q7:
+Program terminates with error free(): invalid pointer.
+Yes we need tools like valgrind to figure out exact cause of problem.
