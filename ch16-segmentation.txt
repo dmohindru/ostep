@@ -124,8 +124,29 @@ max segment size = 64
 range seg0 (0, 20)
 range seg1 (492, 511)
 
-VA  0: 0x0000007a (decimal:  122) --> PA or segmentation violation?
-VA  1: 0x00000079 (decimal:  121) --> PA or segmentation violation?
-VA  2: 0x00000007 (decimal:    7) --> PA or segmentation violation?
-VA  3: 0x0000000a (decimal:   10) --> PA or segmentation violation?
-VA  4: 0x0000006a (decimal:  106) --> PA or segmentation violation?
+VA  0: 0x0000007a (decimal:  122) --> VALID in SEG1: 0x000001FA (decimal: 506)
+0x7A = 111 1010 --> top bit set, hence seg 1
+effective offset = 58 - 64 = -6
+PA = 512 - 6 = 506
+
+VA  1: 0x00000079 (decimal:  121) --> VALID in SEG1: 0x000001F9 (decimal: 505)
+0x79 = 111 1001 --> top bit set, hence seg 1
+effective offset = 57 - 64 = -7
+PA = 512 - 7 = 505
+
+VA  2: 0x00000007 (decimal:    7) --> VALID in SEG0: 0x00000007 (decimal: 7)
+0x07 = 000 0111 --> top bit clear, hence seg 0
+effective offset = 7
+PA = 0 + 7 = 7
+
+VA  3: 0x0000000a (decimal:   10) --> VALID in SEG0: 0x0000000A (decimal: 10)
+0x0a = 000 1010 --> top bit clear, hence seg 0
+effective offset = 10
+PA = 0 + 10 = 10
+
+VA  4: 0x0000006a (decimal:  106) --> SEGMENTATION VIOLATION (SEG1)
+0x6A = 110 1010 --> top bit set, hence seg 1
+effective offset = 42 - 64 = -22
+PA = 512 - 22 = 490
+
+Q2:
