@@ -59,3 +59,9 @@ Valgrind identifies invalid memory read to an unallocated block of memory.
 Q7:
 Program terminates with error free(): invalid pointer.
 Yes we need tools like valgrind to figure out exact cause of problem.
+
+Q8:
+DONE
+
+Q9:
+DONE

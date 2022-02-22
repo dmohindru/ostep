@@ -1,0 +1,131 @@
+THE CRUX: HOW TO SUPPORT A LARGE ADDRESS SPACE
+
+16.1 Segmentation: Generalized Base/Bounds
+------------------------------------------
+The idea is simple: instead of having just one base and bounds pair in our MMU, why not have a base and bounds pair per logical segment of the address space?
+
+In our canonical address space, we have three logically-different segments: code, stack, and heap. What segmentation allows the OS to do is to place each one of those segments in different parts of physical memory, and thus avoid filling physical memory with unused virtual address space. The hardware structure in our MMU required to support segmentation is just what you’d expect: in this case, a set of three base and bounds register pairs.
+
+16.2 Which Segment Are We Referring To?
+---------------------------------------
+One common approach, sometimes referred to as an explicit approach, is to chop up the address space into segments based on the top few bits of the virtual address; this technique was used in the VAX/VMS system. In our example above, we have three segments; thus we need two bits to accomplish our task.
+
+There are other ways for the hardware to determine which segment a particular address is in. In the implicit approach, the hardware determines the segment by noticing how the address was formed. If, for example, the address was generated from the program counter (i.e., it was an instruction fetch), then the address is within the code segment; if the address is based off of the stack or base pointer, it must be in the stack segment; any other address must be in the heap.
+
+16.3 What About The Stack?
+--------------------------
+The first thing we need is a little extra hardware support. Instead of just base and bounds values, the hardware also needs to know which way the segment grows (a bit, for example, that is set to 1 when the segment grows in the positive direction, and 0 for negative).
+
+16.4 Support for Sharing
+------------------------
+As support for segmentation grew, systemdesigners soon realized that they could realize new types of efficiencies with a little more hardware support. Specifically, to save memory, sometimes it is useful to share certain memory segments between address spaces. In particular, code sharing is common and still in use in systems today.
+
+To support sharing, we need a little extra support from the hardware, in the form of protection bits.
+
+16.5 Fine-grained vs. Coarse-grained Segmentation
+--------------------------------------------------
+Supporting many segments requires even further hardware support, with a segment table of some kind stored in memory. Such segment tables usually support the creation of a very large number of segments, and thus enable a system to use segments in more flexible ways than we have thus far discussed.
+
+16.6 OS Support
+----------------
+Pieces of the address space are relocated into physical memory as the system runs, and thus a huge savings of physical memory is achieved relative to our simpler approach with just a single base/bounds pair for the entire address space. Specifically, all the unused space between the stack and the heap need not be allocated in physical memory, allowing us to fit more address spaces into physical memory and support a large and sparse virtual address space per process.
+
+The general problem that arises is that physical memory quickly becomes full of little holes of free space, making it difficult to allocate new segments, or to grow existing ones. We call this problem external fragmentation.
+
+One solution to this problem would be to compact physical memory by rearranging the existing segments.
+
+Compaction also (ironically)makes requests to grow existing segments hard to serve, and may thus cause further rearrangement to accommodate such requests.
+A simpler approach might instead be to use a free-list management algorithm that tries to keep large extents of memory available for allocation.
+
+
+Homework exercises
+------------------
+
+Important calculations for exercises
+=> seg0 if top most bit is zero otherwise seg1
+=> max segmentment size is all bits set but the MSB. Eg. Address for 10 bits their segment size is X1 1111 1111 = 511 (decimal).
+=> range of seg0 (segment_base, segment_base+limit_register)
+=> range of seg1 (segment_base-limit_register, segment_base-1)
+=> effective offset for seg0: all bits but the MSB. Eg. 
+	VA = 0x1E8 = 01 1110 1000 = 488 (decimal)
+=> effective offest for seg1:
+	value of top n-1 bits - max size of segment
+=> physical address calculation for seg0/seg1
+	base_register + effective_offset
+
+Q1:
+./segmentation.py -a 128 -p 512 -b 0 -l 20 -B 512 -L 20 -s 0
+max segment size = 64
+range seg0 (0, 20)
+range seg1 (492, 511)
+
+VA  0: 0x0000006c (decimal:  108) --> VALID in SEG1: 0x000001ED (decimal: 493)
+0x6c = 110 1100 --> top bit set, hence seg1
+effective offset = 44 - 64 = -20
+PA = 512 - 20 = 492
+
+VA  1: 0x00000061 (decimal:   97) --> SEGMENTATION VIOLATION (SEG1)
+0x61 = 110 0001 --> top bit set, hence seg1
+effective offset = 33 - 64 = 30
+PA = 512 - 31 = 481
+
+VA  2: 0x00000035 (decimal:   53) --> SEGMENTATION VIOLATION (SEG0)
+0x35 = 011 0101 --> top bit clear, hence seg0
+effective offset = 53
+PA = 0 + 53 = 53
+
+VA  3: 0x00000021 (decimal:   33) --> SEGMENTATION VIOLATION (SEG0)
+0x21 = 010 0001 --> top bit clear, hence seg0
+effective offset = 33
+PA = 0 + 53 = 53
+
+VA  4: 0x00000041 (decimal:   65) --> SEGMENTATION VIOLATION (SEG1)
+0x41 = 100 0001 --> top bit set, hence seg0
+effective offset = 1 - 64 = -63
+PA = 512 - 63 = 449
+
+./segmentation.py -a 128 -p 512 -b 0 -l 20 -B 512 -L 20 -s 1
+
+
+max segment size = 64
+range seg0 (0, 20)
+range seg1 (492, 511)
+
+VA  0: 0x00000011 (decimal:   17) --> VALID in SEG0: 0x00000011 (decimal: 17)
+0x11 = 0001 0001 --> top bit clear, hence seg 0
+effective offset = 17
+PA = 0 + 17 = 17
+
+VA  1: 0x0000006c (decimal:  108) --> VALID in SEG1: 0x000001EC (decimal: 492)
+0x6c = 110 1100 -> top bit set, hence seg 1
+effective offset = 44 - 64 = -20
+PA = 512 - 20 = 492
+
+VA  2: 0x00000061 (decimal:   97) --> SEGMENTATION VIOLATION (SEG1)
+0x61 = 110 0001 --> top bit set, hence seg 1
+effective offset = 33 - 64 = -31
+PA = 512 - 31 = 481
+
+
+VA  3: 0x00000020 (decimal:   32) --> SEGMENTATION VIOLATION (SEG0)
+0x20 = 0010 0000 --> top bit clear, hence seg 0
+effective offset = 32
+PA = 0 + 32 = 32
+
+VA  4: 0x0000003f (decimal:   63) --> SEGMENTATION VIOLATION (SEG0)
+0x3f 011 1111 -> top bit clear, hence seg 0
+effective offset = 63
+PA = 0 + 63 = 63
+
+./segmentation.py -a 128 -p 512 -b 0 -l 20 -B 512 -L 20 -s 2
+
+
+max segment size = 64
+range seg0 (0, 20)
+range seg1 (492, 511)
+
+VA  0: 0x0000007a (decimal:  122) --> PA or segmentation violation?
+VA  1: 0x00000079 (decimal:  121) --> PA or segmentation violation?
+VA  2: 0x00000007 (decimal:    7) --> PA or segmentation violation?
+VA  3: 0x0000000a (decimal:   10) --> PA or segmentation violation?
+VA  4: 0x0000006a (decimal:  106) --> PA or segmentation violation?
