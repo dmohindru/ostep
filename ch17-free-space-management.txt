@@ -1,0 +1,277 @@
+17.1 Assumptions
+----------------
+The space that this library manages is known historically as the heap, and the generic data structure used to manage free space in the heap is some kind of free list.
+We further assume that primarily we are concernedwith external fragmentation. Allocators could of course also have the problem of internal fragmentation.
+
+17.2 Low-level Mechanisms
+-------------------------
+
+
+17.3 Basic Strategies
+---------------------
+The ideal allocator is both fast andminimizes fragmentation. Unfortunately, because the stream of allocation and free requests can be arbitrary (after all, they are determined by the programmer), any particular strategy can do quite badly given the wrong set of inputs.
+
+Allocator strategies
+- Best Fit
+- Worst Fit
+- First Fit
+
+17.4 Other Approaches
+---------------------
+Beyond the basic approaches described above, there have been a host of suggested techniques and algorithms to improvememory allocation in some way. We list a few of them here for your consideration.
+
+- Segregated Lists
+The basic idea is simple: if a particular application has one (or a few) popular-sized request that it makes, keep a separate list just to manage objects of that size; all other requests are forwarded to a more general memory allocator.
+
+- Buddy Allocation
+In such a system, free memory is first conceptually thought of as one big space of size 2N. When a request for memory is made, the search for free space recursively divides free space by two until a block that is big enough to accommodate the request is found (and a further split into two would result in a space that is too small). The beauty of buddy allocation is found in what happens when that block is freed. When returning the 8KB block to the free list, the allocator checks whether the “buddy” 8KB is free; if so, it coalesces the two blocks into a 16KB block.
+
+Homework Exercises
+------------------
+Q1:
+./malloc.py -n 10 -H 0 -p BEST -s 0
+seed 0
+size 100
+baseAddr 1000
+headerSize 0
+alignment -1
+policy BEST
+listOrder ADDRSORT
+coalesce False
+numOps 10
+range 10
+percentAlloc 50
+allocList 
+compute False
+
+ptr[0] = Alloc(3) returned 1000 (searched 1 element)
+Free List [ Size 1 ]: [ addr: 1003 sz: 97 ] 
+
+Free(ptr[0]) returned 0
+Free List [ Size 2 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 97 ] 
+
+ptr[1] = Alloc(5) returned 1003 (searched 2 elements)
+Free List [ Size 2 ]: [ addr: 1000 sz: 3 ] [ addr: 1008 sz: 92 ] 
+
+Free(ptr[1]) returned 0
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 92 ] 
+
+ptr[2] = Alloc(8) returned 1008 (searched 3 elements)
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1016 sz: 84 ] 
+
+Free(ptr[2]) returned 0
+Free List [ Size 4 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 84 ] 
+
+ptr[3] = Alloc(8) returned 1008 (searched 4)
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1016 sz: 84 ] 
+
+Free(ptr[3]) returned 0
+Free List [ Size 4 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 84 ] 
+
+ptr[4] = Alloc(2) returned 1000 (searched 4 elements)
+Free List [ Size 4 ]: [ addr: 1002 sz: 1 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 84 ] 
+
+ptr[5] = Alloc(7) returned 1008 (seached 4 elements)
+Free List [ Size 4 ]: [ addr: 1002 sz: 1 ] [ addr: 1003 sz: 5 ] [ addr: 1015 sz: 1 ] [ addr: 1016 sz: 84 ] 
+
+Longest search: 4 elements
+
+Q2:
+./malloc.py -n 10 -H 0 -p WORST -s 0
+seed 0
+size 100
+baseAddr 1000
+headerSize 0
+alignment -1
+policy WORST
+listOrder ADDRSORT
+coalesce False
+numOps 10
+range 10
+percentAlloc 50
+allocList 
+compute False
+
+ptr[0] = Alloc(3) returned 1000 (searched 1 element)
+Free List [ Size 1 ]: [ addr: 1003 sz: 97 ] 
+
+Free(ptr[0]) returned 0
+Free List [ Size 2 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 97 ] 
+
+ptr[1] = Alloc(5) returned 1003 (searched 2 elements)
+Free List [ Size 2 ]: [ addr: 1000 sz: 3 ] [ addr: 1008 sz: 92 ] 
+
+Free(ptr[1]) returned 0
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 92 ] 
+
+ptr[2] = Alloc(8) returned 1008 (searched 3 elements)
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1016 sz: 84 ] 
+
+Free(ptr[2]) returned 0
+Free List [ Size 4 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 84 ] 
+
+ptr[3] = Alloc(8) returned 1016 (searched 4)
+Free List [ Size 4 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1024 sz: 76 ] 
+
+Free(ptr[3]) returned 0
+Free List [ Size 5 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 8 ] [ addr: 1024 sz: 76 ] 
+
+ptr[4] = Alloc(2) returned 1024 (searched 5 elements)
+Free List [ Size 5 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 8 ] [ addr: 1026 sz: 74 ] 
+
+ptr[5] = Alloc(7) returned 1026 (seached 5 elements)
+Free List [ Size 5 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 8 ] [ addr: 1033 sz: 67 ] 
+
+With the worst fit we had to do more search as free list had more nodes in it.
+
+Longest search: 5 elements
+
+Q3:
+./malloc.py -n 10 -H 0 -p FIRST -s 0
+seed 0
+size 100
+baseAddr 1000
+headerSize 0
+alignment -1
+policy FIRST
+listOrder ADDRSORT
+coalesce False
+numOps 10
+range 10
+percentAlloc 50
+allocList 
+compute False
+
+ptr[0] = Alloc(3) returned 1000 (searched 1 element)
+Free List [ Size 1 ]: [ addr: 1003 sz: 97 ] 
+
+Free(ptr[0]) returned 0
+Free List [ Size 2 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 97 ] 
+
+ptr[1] = Alloc(5) returned 1003 (searched 2 elements)
+Free List [ Size 2 ]: [ addr: 1000 sz: 3 ] [ addr: 1008 sz: 92 ] 
+
+Free(ptr[1]) returned 0
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 92 ] 
+
+ptr[2] = Alloc(8) returned 1008 (searched 3 elements)
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1016 sz: 84 ] 
+
+Free(ptr[2]) returned 0
+Free List [ Size 4 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 84 ] 
+
+ptr[3] = Alloc(8) returned 1008 (searched 3)
+Free List [ Size 3 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1016 sz: 84 ] 
+
+Free(ptr[3]) returned 0
+Free List [ Size 4 ]: [ addr: 1000 sz: 3 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 84 ] 
+
+ptr[4] = Alloc(2) returned 1000 (searched 1 elements)
+Free List [ Size 4 ]: [ addr: 1002 sz: 1 ] [ addr: 1003 sz: 5 ] [ addr: 1008 sz: 8 ] [ addr: 1016 sz: 84 ] 
+
+ptr[5] = Alloc(7) returned 1008 (seached 3 elements)
+Free List [ Size 4 ]: [ addr: 1002 sz: 1 ] [ addr: 1003 sz: 5 ] [ addr: 1015 sz: 1 ] [ addr: 1016 sz: 84 ] 
+
+With the first fit we had similar free list at that of BEST fit policy but we had to so lesser search for free nodes hence bit faster.
+Longest search: 3 elements
+
+Q4:
+./malloc.py -n 10 -H 0 -p BEST -s 0 -l ADDRSORT -c
+Longest search: 4 elements
+
+./malloc.py -n 10 -H 0 -p BEST -s 0 -l SIZESORT+ -c
+Longest search: 4 elements
+
+./malloc.py -n 10 -H 0 -p BEST -s 0 -l SIZESORT- -c
+Longest search: 4 elements
+--------------------
+./malloc.py -n 10 -H 0 -p WORST -s 0 -l ADDRSORT -c
+Longest search: 5 elements
+
+./malloc.py -n 10 -H 0 -p WORST -s 0 -l SIZESORT+ -c
+Longest search: 5 elements
+
+./malloc.py -n 10 -H 0 -p WORST -s 0 -l SIZESORT- -c
+Longest search: 5 elements
+--------------------
+./malloc.py -n 10 -H 0 -p FIRST -s 0 -l ADDRSORT -c
+Longest search: 3 elements
+
+./malloc.py -n 10 -H 0 -p FIRST -s 0 -l SIZESORT+ -c
+Longest search: 3 elements
+
+./malloc.py -n 10 -H 0 -p FIRST -s 0 -l SIZESORT- -c
+Longest search: 1 elements
+
+Q5:
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l ADDRSORT -C -c
+free list: 1 node
+
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l ADDRSORT -c
+free list: 31 nodes
+
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l SIZESORT+ -C -c
+free list: 28 nodes
+
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l SIZESORT+ -c
+free list: 31 nodes
+
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l SIZESORT- -C -c
+free list: 33 nodes
+
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l SIZESORT- -c
+free list: 31 nodes
+
+if free memory block are coalesced then naturally we have shorter list to triverse and hence memory allocation is faster. From above results has SIZESORT+ or SIZESORT- has only marginal advantage of coalescing however in ADDRSORT policy we can see substantial gain of coalesing.
+
+
+Q6:
+Obviously when there are more allocation and less deallocation then failure rate of allocation will increase and also free list will be almost empty.
+
+With 60% allocation requests
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l ADDRSORT -P 60 -c | grep 'returned -1' | wc -l
+172
+Failure rate: 172 / 1000 = 17.2%
+
+With 100% allocation requests
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l ADDRSORT -P 100 -c | grep 'returned -1' | wc -l
+983
+Failure rate: 98.3%
+
+With only 1% allocation requests
+./malloc.py -n 1000 -H 0 -p BEST -s 0 -l ADDRSORT -P 1 -c | grep 'returned -1' | wc -l
+0
+Failure rate: 0%
+
+
+Q7:
+If we make allocation reqeust of different size then we will create fragmented free list
+./malloc.py -c -A +20,+20,+20,+20,+20,-0,-1,-2,-3,-4
+free list: 5 nodes
+./malloc.py -c -A +20,+20,+20,+20,+20,-0,-1,-2,-3,-4 -C
+free list: 1 node
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -l SIZESORT-
+free list: 4 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -l SIZESORT- -C
+free list: 4 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p FIRST -l SIZESORT+
+free list: 4 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p FIRST -l SIZESORT+ -C
+free list: 1 node
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p FIRST -l SIZESORT-
+free list: 4 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p FIRST -l SIZESORT- -C
+free list: 4 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p WORST -l SIZESORT+
+free list: 4 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p WORST -l SIZESORT+ -C
+free list: 1 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p WORST -l SIZESORT-
+free list: 4 nodes
+./malloc.py -c -A +10,-0,+20,-1,+30,-2,+40,-3 -p WORST -l SIZESORT- -C
+free list: 4 nodes
+
+Over ADDRSORT has best result with coalesing
+
+
+
