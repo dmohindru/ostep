@@ -1,0 +1,201 @@
+Thus, it may be worth considering the second approach: to chop up space into fixed-sized pieces. In virtual memory, we call this idea paging. Instead of splitting up a process’s address space into some number of variable-sized logical segments (e.g., code, heap, stack), we divide it into fixed-sized units, each of which we call a page. Correspondingly, we view physical memory as an array of fixed-sized slots called page frames; each of these frames can contain a single virtual-memory page.
+
+18.1 A Simple Example And Overview
+----------------------------------
+Paging, as we will see, has a number of advantages over our previous approaches. Probably the most important improvement will be flexibility: with a fully-developed paging approach, the system will be able to support the abstraction of an address space effectively, regardless of how a process uses the address space.
+
+To record where each virtual page of the address space is placed in physical memory, the operating system usually keeps a per-process data structure known as a page table.
+
+18.2 Where Are Page Tables Stored?
+----------------------------------
+Page tables can get terribly large, much bigger than the small segment table or base/bounds pair we have discussed previously. For example, imagine a typical 32-bit address space, with 4KB pages. This virtual address splits into a 20-bit VPN and 12-bit offset (recall that 10 bits would be needed for a 1KB page size, and just add two more to get to 4KB).
+
+18.3 What’s Actually In The Page Table?
+---------------------------------------
+A valid bit is common to indicate whether the particular translation is valid. Thus, the valid bit is crucial for supporting a sparse address space; by simply marking all the unused pages in the address space invalid, we remove the need to allocate physical frames for those pages and thus save a great deal of memory.
+
+We alsomight have protection bits, indicatingwhether the page could be read from, written to, or executed from.
+
+There are a couple of other bits that are important but we won’t talk about much for now. A present bit indicateswhether this page is in physical memory or on disk (i.e., it has been swapped out).
+
+A dirty bit is also common, indicating whether the page has been modified since it was brought into memory
+
+Areference bit (a.k.a. accessed bit) is sometimes used to track whether a page has been accessed, and is useful in determining which pages are popular and thus should be kept in memory;
+
+18.4 Paging: Also Too Slow
+--------------------------
+In this example, we’ll assume the hardware performs the translation for us. To fetch the desired data, the system must first translate the virtual address (21) into the correct physical address (117). Thus, before fetching the data from address 117, the system must first fetch the proper page table entry from the process’s page table, perform the translation, and then load the data from physical memory.
+
+To summarize, we now describe the initial protocol for what happens on each memory reference. Figure 18.6 (page 9) shows the approach. For every memory reference  whether an instruction fetch or an explicit load or store), paging requires us to perform one extra memory reference in order to first fetch the translation from the page table.
+
+18.5 A Memory Trace
+-------------------
+
+Homework exercises
+------------------
+Q1:
+./paging-linear-translate.py -P 1k -a 1m -p 512m -v -n 0
+page size: 1KB = 10 bits
+virtual address space = 1MB = 20 bits
+physical memory = 512MB = 30 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (20 - 10) = 2 ^ 10 = 1024
+
+./paging-linear-translate.py -P 1k -a 2m -p 512m -v -n 0
+page size: 1KB = 10 bits
+virtual address space = 2MB = 21 bits
+physical memory = 512MB = 30 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (21 - 10) = 2 ^ 11 = 2048
+
+./paging-linear-translate.py -P 1k -a 4m -p 512m -v -n 0
+page size: 1KB = 10 bits
+virtual address space = 4MB = 22 bits
+physical memory = 512MB = 30 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (22 - 10) = 2 ^ 12 = 4096
+
+./paging-linear-translate.py -P 1k -a 1m -p 512m -v -n 0
+page size: 1KB = 10 bits
+virtual address space = 1MB = 20 bits
+physical memory = 512MB = 30 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (20 - 10) = 2 ^ 10 = 1024
+
+./paging-linear-translate.py -P 2k -a 1m -p 512m -v -n 0
+page size: 2KB = 11 bits
+virtual address space = 1MB = 20 bits
+physical memory = 512MB = 30 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (20 - 11) = 2 ^ 9 = 512
+
+./paging-linear-translate.py -P 4k -a 1m -p 512m -v -n 0
+page size: 4KB = 12 bits
+virtual address space = 1MB = 20 bits
+physical memory = 512MB = 30 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (20 - 12) = 2 ^ 8 = 256
+
+Q2:
+./paging-linear-translate.py -P 1k -a 16k -p 32k -v -u 0
+page size: 1KB = 10 bits
+virtual address space = 16KB = 14 bits
+physical memory = 32KB = 15 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (14 - 10) = 2 ^ 4 = 16
+
+VA 0x00003a39 (decimal:    14905) 
+VA = 1110 10 0011 1001
+offset = 0x239
+VPN = 0xe (Dec 14) (0x00000000) top most bit clear, hence Invalid
+
+VA 0x00003ee5 (decimal:    16101)
+VA = 1111 10 1110 0101
+offset = 0x2e5
+VPN = 0xf (Dec 15) (0x00000000) top most bit clear, hence Invalid 
+
+VA 0x000033da (decimal:    13274)
+VA = 1100 11 1101 1010
+offset = 0x2da
+VPN = 0xc (Dec 12) (0x00000000) top most bit clear, hence Invalid
+
+VA 0x000039bd (decimal:    14781) 
+VA = 1110 01 1011 1101
+offset = 0x1bd
+VPN = 0xe (Dec 14) (0x00000000) top most bit clear, hence Invalid
+
+VA 0x000013d9 (decimal:     5081) 
+VA = 0100 11 1101 1001
+offset = 0x3d9
+VPN = 0x4 (Dec 4) (0x00000000) top most bit clear, hence Invalid
+
+./paging-linear-translate.py -P 1k -a 16k -p 32k -v -u 25
+page size: 1KB = 10 bits
+virtual address space = 16KB = 14 bits
+physical memory = 32KB = 15 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (14 - 10) = 2 ^ 4 = 16
+
+VA 0x00003986 (decimal:    14726) 
+VA = 1110 01 1000 0110
+offset = 0x186
+VPN = 0xe (Dec 14) (0x00000000) top most bit clear, hence Invalid
+
+
+VA 0x00002bc6 (decimal:    11206) 
+VA = 1010 11 1100 0110
+offset = 0x3c6
+VPN = 0xA (Dec 10) (0x80000013) top most bit set, hence valid
+PA = 100 1111 1100 0110 = 0x4fc6
+
+VA 0x00001e37 (decimal:     7735) 
+VA = 0111 10 0011 0111
+offset = 0x237
+VPN = 0x7 (Dec 7) (0x00000000) top most bit clear, hence Invalid
+
+VA 0x00000671 (decimal:     1649)
+VA = 0001 10 0111 0001
+offset = 0x271
+VPN = 0x1 (Dec 1) (0x00000000) top most bit clear, hence Invalid
+
+VA 0x00001bc9 (decimal:     7113)
+VA = 0110 11 1100 1001
+offset = 0x3c9
+VPN = 0x6 (Dec 6) (0x00000000) top most bit clear, hence Invalid
+
+./paging-linear-translate.py -P 1k -a 16k -p 32k -v -u 50
+page size: 1KB = 10 bits
+virtual address space = 16KB = 14 bits
+physical memory = 32KB = 15 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (14 - 10) = 2 ^ 4 = 16
+
+VA 0x00003385 (decimal:    13189)
+VA = 1100 11 1000 0101
+offset = 0x385
+VPN = 0xc (Dec 11) (0x00000000) top most bit clear, hence Invalid
+
+
+VA 0x0000231d (decimal:     8989)
+VA = 1000 11 0001 1101
+offset = 0x31d
+VPN = 0x8 (Dec 8) (0x00000000) top most bit clear, hence Invalid
+
+VA 0x000000e6 (decimal:      230)
+VA = 0000 00 1110 0110
+offset = 0x0e6
+VPN = 0x0 (Dec 0) (0x80000018) top most bit set, hence valid
+PA = 110 00XX XXXX XXXX
+ |	 XXX XX00 1110 0110
+PA = 110 0000 1110 0110 (0x60e6)
+
+VA 0x00002e0f (decimal:    11791)
+VA = 1011 10 0000 1111
+offset = 0x20f
+VPN = 0xb (Dec 11) (0x00000000) top most bit clear, hence Invalid
+
+
+VA 0x00001986 (decimal:     6534) --> PA or invalid address?
+VA = 0110 01 1000 0110
+offset = 0x186
+VPN = 0x6 (Dec 6) (0x8000001d) top most bit set, hence valid
+PA = 111 01XX XXXX XXXX
+ |	 XXX XX01 1000 0110
+PA = 111 0101 1000 0110 (0x7586)
+
+./paging-linear-translate.py -P 1k -a 16k -p 32k -v -u 75
+page size: 1KB = 10 bits
+virtual address space = 16KB = 14 bits
+physical memory = 32KB = 15 bits
+
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (14 - 10) = 2 ^ 4 = 16
+
+VA 0x00002e0f (decimal:    11791) 
+
+VA 0x00001986 (decimal:     6534) 
+
+VA 0x000034ca (decimal:    13514) 
+
+VA 0x00002ac3 (decimal:    10947) 
+
+VA 0x00000012 (decimal:       18) 
