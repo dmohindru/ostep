@@ -190,12 +190,114 @@ physical memory = 32KB = 15 bits
 
 Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (14 - 10) = 2 ^ 4 = 16
 
-VA 0x00002e0f (decimal:    11791) 
+VA 0x00002e0f (decimal:    11791)
+VA = 1011 10 0000 1111
+offset = 0x20f
+VPN = 0xb (Dec 11) (0x80000013) top most bit set, hence valid
+PA = 100 11XX XXXX XXXX
+ |   XXX XX10 0000 1111
+PA = 100 1110 0000 1111 (0x4e0f)
 
-VA 0x00001986 (decimal:     6534) 
+VA 0x00001986 (decimal:     6534)
+VA = 0110 01 1000 0110
+offset = 0x186
+VPN = 0x6 (Dec 6) (0x8000001f) top most bit set, hence valid
+PA = 111 11XX XXXX XXXX
+ |   XXX XX01 1000 0110
+PA = 111 1101 1000 0110 (0x7d86) 
 
 VA 0x000034ca (decimal:    13514) 
+VA = 1101 00 1100 1010
+offset = 0xca
+VPN = 0xd (Dec 13) (0x8000001b) top most bit set, hence valid
+PA = 110 11XX XXXX XXXX
+ |   XXX XX00 1100 1010
+PA = 110 1100 1100 1010 (0x6cca) 
 
-VA 0x00002ac3 (decimal:    10947) 
+VA 0x00002ac3 (decimal:    10947)
+VA = 1010 10 1100 0011
+offset = 0x2c3
+VPN = 0xa (Dec 10) (0x80000003) top most bit set, hence valid
+PA = 000 11XX XXXX XXXX
+ |   XXX XX10 1100 0011
+PA = 000 1110 1100 0011 (0x0ec3) 
 
-VA 0x00000012 (decimal:       18) 
+VA 0x00000012 (decimal:       18)
+VA = 0000 00 0001 0010
+offset = 0x12
+VPN = 0x0 (Dec 0) (0x80000018) top most bit set, hence valid
+PA = 110 00XX XXXX XXXX
+ |   XXX XX00 0001 0010
+PA = 110 0000 0001 0010 (0x6012)
+
+./paging-linear-translate.py -P 1k -a 16k -p 32k -v -u 100
+page size: 1KB = 10 bits
+virtual address space = 16KB = 14 bits
+physical memory = 32KB = 15 bits
+
+VA 0x00002e0f (decimal:    11791)
+VA = 1011 10 0000 1111
+offset = 0x20f
+VPN = 0xb (Dec 11) (0x80000013) top most bit set, hence valid
+PA = 100 11XX XXXX XXXX
+ |   XXX XX10 0000 1111
+PA = 100 1110 0000 1111 (0x4e0f) 
+
+VA 0x00001986 (decimal:     6534)
+VA = 0110 01 1000 0110
+offset = 0x186
+VPN = 0x6 (Dec 6) (0x8000001f) top most bit set, hence valid
+PA = 111 11XX XXXX XXXX
+ |   XXX XX01 1000 0110
+PA = 111 1101 1000 0110 (0x7d86) 
+
+VA 0x000034ca (decimal:    13514)
+VA = 1101 00 1100 1010
+offset = 0x0ca
+VPN = 0xd (Dec 13) (0x8000001b) top most bit set, hence valid
+PA = 110 11XX XXXX XXXX
+ |   XXX XX00 1100 1010
+PA = 110 1100 1100 1010 (0x6cca) 
+
+VA 0x00002ac3 (decimal:    10947)
+VA = 1010 10 1100 0011
+offset = 0x2c3
+VPN = 0xa (Dec 10) (0x80000003) top most bit set, hence valid
+PA = 000 11XX XXXX XXXX
+ |   XXX XX10 1100 0011
+PA = 000 1110 1100 0011 (0x0ec3) 
+
+VA 0x00000012 (decimal:       18)
+VA = 0000 00 0001 0010
+offset = 0x12
+VPN = 0x0 (Dec 0) (0x80000018) top most bit set, hence valid
+PA = 110 00XX XXXX XXXX
+ |   XXX XX00 0001 0010
+PA = 110 0000 0001 0010 (0x6012)
+
+If more pages are allocated then more pages are valid.
+
+Q3:
+./paging-linear-translate.py -P 8 -a 32 -p 1024 -v -s 1
+page size: 8 bytes = 3 bits
+virtual address space = 32 bytes = 5 bits
+physical memory = 1024 = 10 bits
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (5 - 3) = 2 ^ 2 = 4
+
+./paging-linear-translate.py -P 8k -a 32k -p 1m -v -s 2
+page size: 8KB = 13 bits
+virtual address space = 32KB = 15 bits
+physical memory = 1MB = 20 bits
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (15 - 13) = 2 ^ 2 = 4
+
+./paging-linear-translate.py -P 1m -a 256m -p 512m -v -s 3
+page size: 1MB = 20 bits
+virtual address space = 256MB = 28 bits
+physical memory = 1MB = 29 bits
+Physical page table entries = 2 ^ (virtual address bits - page size bits) = 2 ^ (28 - 20) = 2 ^ 8 = 256
+
+First option page size is too small and in third option page size is too big.
+
+Q4:
+./paging-linear-translate.py -P 1k -a 64k -p 32k -v -u 100
+If address space size is bigger than physical memory then program throws an error.
