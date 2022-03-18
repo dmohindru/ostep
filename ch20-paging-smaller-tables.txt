@@ -1,0 +1,26 @@
+ As you might recall1, linear page tables get pretty big. Assume again a 32-bit address space (232 bytes), with 4KB (212 byte) pages and a 4-byte page-table entry. An address space thus has roughly one million virtual pages in it ( 2^32/2^12 ); multiply by the page-table entry size and you see that our page table is 4MB in size.
+
+CRUX: HOW TO MAKE PAGE TABLES SMALLER?
+Simple array-based page tables (usually called linear page tables) are too big, taking up far too much memory on typical systems. How can we make page tables smaller? What are the key ideas? What inefficiencies arise as a result of these new data structures?
+
+Simple Solution: Bigger Pages
+-----------------------------
+We could reduce the size of the page table in one simple way: use bigger pages. The major problem with this approach, however, is that big pages lead to waste within each page, a problem known as internal fragmentation
+
+20.2 Hybrid Approach: Paging and Segments
+-----------------------------------------
+Thus, our hybrid approach: instead of having a single page table for the entire address space of the process, why not have one per logical segment? In this example, we might thus have three page tables, one for the code, heap, and stack parts of the address space.
+
+To determine which segment an address refers to, we’ll use the top two bits of the address space. Let’s assume 00 is the unused segment, with 01 for code, 10 for the heap, and 11 for the stack. In the hardware, assume that there are thus three base/bounds pairs, one each for code, heap, and stack. When a process is running, the base register for each of these segments contains the physical address of a linear page table for that segment; thus, each process in the system now has three page tables associated with it. The critical difference in our hybrid scheme is the presence of a bounds register per segment; each bounds register holds the value of the maximum valid page in the segment.
+
+20.3 Multi-level Page Tables
+----------------------------
+Adifferent approach doesn’t rely on segmentation but attacks the same problem: how to get rid of all those invalid regions in the page table instead of keeping themall inmemory? We call this approach amulti-level page table, as it turns the linear page table into something like a tree.
+
+The basic idea behind a multi-level page table is simple. First, chop up the page table into page-sized units; then, if an entire page of page-table entries (PTEs) is invalid, don’t allocate that page of the page table at all. To track whether a page of the page table is valid (and if valid, where it is in memory), use a new structure, called the page directory.
+
+It should be noted that there is a cost to multi-level tables; on a TLB miss, two loads from memory will be required to get the right translation information from the page table (one for the page directory, and one for the PTE itself), in contrast to just one load with a linear page table. Thus, the multi-level table is a small example of a time-space trade-off.
+
+20.4 Inverted Page Tables
+-------------------------
+Here, instead of having many page tables (one per process of the system), we keep a single page table that has an entry for each physical page of the system. The entry tells us which process is using this page, and which virtual page of that process maps to this physical page.

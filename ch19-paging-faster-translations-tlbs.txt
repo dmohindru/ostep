@@ -1,0 +1,89 @@
+THE CRUX: HOW TO SPEED UP ADDRESS TRANSLATION
+How can we speed up address translation, and generally avoid the extra memory reference that paging seems to require? What hardware support is required? What OS involvement is needed? 
+
+To speed address translation, we are going to add what is called (for historical reasons [CP78]) a translation-lookaside buffer, or TLB [CG68, C95]. A TLB is part of the chip’s memory-management unit (MMU), and is simply a hardware cache of popular virtual-to-physical address translations; thus, a better name would be an address-translation cache.
+
+19.1 TLB Basic Algorithm
+------------------------
+The TLB, like all caches, is built on the premise that in the common case, translations are found in the cache (i.e., are hits). If so, little overhead is added, as the TLB is found near the processing core and is designed to be quite fast. When a miss occurs, the high cost of paging is incurred;
+
+19.2 Example: Accessing An Array
+--------------------------------
+spatial locality
+temporal locality
+
+19.3 Who Handles The TLB Miss?
+------------------------------
+In the olden days, the hardware had complex instruction sets (sometimes called CISC, for complex-instruction set computers) and the people who built the hardware didn’t much trust those sneaky OS people. Thus, the hardware would handle the TLB miss entirely.
+
+An example of an “older” architecture that has hardware-managed TLBs is the Intel x86 architecture, which uses a fixed multi-level page table (see the next chapter for details); the current page table is pointed to by the CR3 register [I09].
+
+More modern architectures (e.g., MIPS R10k [H93] or Sun’s SPARC v9 [WG00], both RISC or reduced-instruction set computers) have what is known as a software-managed TLB.
+
+19.4 TLB Contents: What’s In There?
+-----------------------------------
+A typical TLB might have 32, 64, or 128 entries and be what is called fully associative. Basically, this justmeans that any given translation can be anywhere in the TLB, and that the hardware will search the entire TLB in parallel to find the desired translation.
+
+19.5 TLB Issue: Context Switches
+--------------------------------
+HOW TO MANAGE TLB CONTENTS ON A CONTEXT SWITCH
+When context-switching between processes, the translations in the TLB
+for the last process are not meaningful to the about-to-be-run process.
+What should the hardware or OS do in order to solve this problem?
+
+There are a number of possible solutions to this problem. One approach
+is to simply flush the TLB on context switches, thus emptying
+it before running the next process.
+
+However, there is a cost: each time a process runs, it
+must incur TLB misses as it touches its data and code pages.
+
+To reduce this overhead, some systems add hardware support to enable
+sharing of the TLB across context switches. In particular, some hardware
+systems provide an address space identifier (ASID) field in the
+TLB.
+
+19.6 Issue: Replacement Policy
+-------------------------------
+THE CRUX: HOW TO DESIGN TLB REPLACEMENT POLICY
+Which TLB entry should be replaced when we add a new TLB entry? The goal, of course, being to minimize the miss rate (or increase hit rate) and thus improve performance.
+One common approach is to evict the least-recently-used or LRU entry
+Another typical approach is to use a random policy, which evicts a TLB mapping at random.
+
+19.7 A Real TLB Entry
+---------------------
+MIPS TLBs usually have 32 or 64 of these entries, most of which are
+used by user processes as they run. However, a few are reserved for the
+OS.
+Because theMIPS TLB is software managed, there needs to be instructions
+to update the TLB. TheMIPS provides four such instructions: TLBP,
+which probes the TLB to see if a particular translation is in there; TLBR,
+which reads the contents of a TLB entry into registers; TLBWI, which replaces
+a specific TLB entry; and TLBWR, which replaces a random TLB
+entry.
+
+Homework exercises
+------------------
+
+Q1:
+CLOCK_PROCESS_CPUTIME_ID has resolution of 1 nanosecond on Linux, 1000 nanoseconds on macOS
+
+Q2:
+refer homework code directory
+
+Q3:
+refer homework code directory
+
+Q4:
+refer homework code directory
+
+Q5:
+Using gcc's optimize option `gcc -O0` to disable optimization. This is the default setting.
+
+Q6:
+Use `pthread_setaffinity(3)` or `taskset(1)` on Linux, `cpuset_setaffinity(2)` or `cpuset(1)` on FreeBSD.
+
+    Or use `hwloc-bind --single`.
+
+Q7:
+Use `calloc(3)` to initialize array then measure time.
