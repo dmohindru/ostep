@@ -24,3 +24,285 @@ It should be noted that there is a cost to multi-level tables; on a TLB miss, tw
 20.4 Inverted Page Tables
 -------------------------
 Here, instead of having many page tables (one per process of the system), we keep a single page table that has an entry for each physical page of the system. The entry tells us which process is using this page, and which virtual page of that process maps to this physical page.
+
+Homework exercises
+------------------
+Q1:
+Only register is required for any level of lookup tables. Single register should point to base page directroy.
+
+Q2:
+./paging-multilevel-translate.py -s 0
+
+page size: 32 bits
+page size bits: 5 bits
+
+Virtual address space = 32KB
+Virtual address bits = 15 bits
+
+Physical memory space = 4096 bytes
+Physical memory bits = 12 bits
+
+page 108:
+ 0: 83 
+ 1: fe 
+ 2: e0 
+ 3: da 
+ 4: 7f 
+ 5: d4 
+ 6: 7f 
+ 7: eb 
+ 8: be 
+ 9: 9e 
+10: d5 
+11: ad 
+12: e4 
+13: ac 
+14: 90 
+15: d6 
+16: 92 
+17: d8 
+18: c1 
+19: f8 
+20: 9f 
+21: e1 
+22: ed 
+23: e9 
+24: a1 
+25: e8 
+26: c7 
+27: c2 
+28: a9 
+29: d1 
+30: db 
+31: ff
+
+Virtual Address 611c
+1 1000 0 1000 1 1100
+PDE Index = 0x18 [decimal: 24], PDE contents: 0xa1 (1 010 0001) (valid 1, pfn 0x21 [decimal 33])
+page  33: 7f 7f 7f 7f 7f 7f 7f 7f b5 7f9d7f7f7f7f7f7f7f7f7f7f7f7f7f7f7ff6b17f7f7f7f
+PTE Index = 0x08 [decimal:  8], PTE contents: 0xb5 (1 011 0101) (valid 1, pfn 0x35 [decimal 53])
+page  53:0f0c18090e121c0f081713071c1e191b09161b150e030d121c1d0e1a 08 18 11 00
+Translation to physical address for virtual address 0x611c
+011 0101 XXXXX
+XXX XXXX 11100
+--------------
+011 0101 11100 =>  0110 1011 1100 => 0x6bc [value: 08]
+--------------
+
+Virtual Address 3da8
+0 1111 0 1101 0 1000
+PDE Index = 0X0F [decimal: 15], PDE contents: 0Xd6 (1 101 0110) (valid 1, pfn 0x56) [decimal 86]
+page  86: 7f 7f 7f 7f 7f 7f 7f c5 7f 7f 7f 7f 7f7f7f7f7f7f7f7fca7f7fee7f7f7f7f7f7f7f7f
+PTE Index = 0X0d [decimal: 13], PTE contents: 0x7f (0 111 1111) (valid 0, pfn 0x7f) --> page fault (table entry not valid)
+
+Virtual Address 17f5
+0 0101 1 1111 1 0101
+PDE Index = 0X05 [decimal: 5], PDE contents: d4 (1 101 0100) (valid 1, pfn 0x54) [decimal 84]
+page  84:7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f947f7f7f7f7fce
+PTE Index: 0x1f [decimal: 31], PTE contents: 0xce (1 100 1110) (valid 1, pfn 0x4e) [decimal 78]
+page  78: 0e 02 17 1b 1c 1a 1b 1c 10 0c 15 08 19 1a 1b 12 1d 11 0d 14 1e 1c 18 02120f131a07160306
+offset 0x15 [decimal: 21]
+Translation to physcial address for virtual address 0x3da8
+100 1110 XXXXX
+XXX XXXX 10101
+--------------
+100 1110 10101 => 1001 1101 0101 => 0x9d5 [value: 0x1c]
+--------------
+
+
+Virtual Address 7f6c
+1 1111 1 1011 0 1100
+PDE Index = 0x1f [decimal: 31], PDE contents: 0xff (1 111 1111) (valid 1, pfn 0x7f) [decimal 127]
+page 127:7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7fdf7f7f7f7f7f7f7f7f7f7f 7f 7f 95 7f 7f
+PTE Index: 0x1b [decimal: 27], PTE contents: 0x7f (0 111 1111) (valid 0, pfn 0x7f) --> page fault (table entry not valid)
+
+Virtual Address 0bad
+0 0010 1 1101 0 1101
+PDE Index = 0x02 [decimal: 2], PDE contents: 0xe0 (1 110 0000) (valid 1, pfn 0x60) [decimal 96]
+page  96:7f7f7f7f7f7f7f7f7f7f7f7f7f7fb67f7f7f7f7f7f7f7f7f7f7f7f7f7f 7f 7f 7f
+PTE Index: 0x1d [decimal: 29], PTE contents: 0x7f (0 111 1111) (valid 0, pfn 0x7f) --> page fault (table entry not valid)
+
+Virtual Address 6d60
+1 1011 0 1011 0 0000
+PDE Index = 0x1b [decimal: 27], PDE contents: 0xc2 (1 100 0010) (valid 1, pfn 0x42) [decimal 66]
+page  66: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f d7 7f 7f
+PTE Index: 0x0b [decimal: 11], PTE contents: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table enty not valid)
+
+
+
+Virtual Address 2a5b
+0 1010 1 0010 1 1011
+PDE Index = 0x0a [decimal: 10], PDE contents: d5 (1 101 0101) (valid 1, pfn 0x55) [decimal 85]
+page  85: 7f 7f 7f 7f 7f 7f 7f 7f 9a 7f bf 7f 7f 7f 7f 7f 7f 7f 7f 7faf7f7f7f7f7f7f7f7f7f7f7f
+PTE Index: 0x12 [decimal: 18 ], PTE contents: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table entry not valid)
+
+
+Virtual Address 4c5e
+1 0011 0 0010 1 1110
+PDE Index = 0x13 [decimal: 19], PDE contents: f8 (1 111 1000) (valid 1, pfn 0x78) [decimal 120]
+page 120:7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7fcb7f7f7f7f7f7f7f7f7f7f7f7f7f
+PTE Index: 0x2 [decimal 2], PTE contents: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table entry not valid)
+
+
+Virtual Address 2592
+0 1001 0 1100 1 0010
+PDE Index: 0x9 [decimal: 9], PDE content: 9e (1 001 1110) (valid 1, pfn 0x1e) [decimal 30]
+page  30: 7f 7f 7f 7f 7f 84 7f 7f 7f 7f 97 7f bd 7f7ff47f7f7f7f7f7f7f7f7f7f7f7f7f7f9c7f
+PTE Index: 0xc [decimal 12], PTE content: 0xbd (1 011 1101) (valid 1, pfn 0x3d) [decimal 61]
+page  61: 01 05 10 02 0c 0a 0c 03 1c 0e 1a 1e 0a 0e 15 0d 09 16 1b 1c130b1e1302021701000c100d
+offset 0x12 [decimal 18]
+Translation to physcial address for virtual address 0x2592
+011 1101 XXXXX
+XXX XXXX 10010
+--------------
+011 1101 10010 => 0111 1011 0010 => 0x7b2 [value 1b] 
+--------------
+
+Virtual Address 3e99
+0 1111 1 0100 1 1001
+PDE Index: 0xf [decimal: 15], PDE content: 0xd6 (1 101 0110) (valid 1, pfn 0x56) [decimal 86]
+page  86:7f7f7f7f7f7f7fc57f7f7f7f7f7f7f7f7f7f7f7f ca 7f 7f ee 7f 7f 7f 7f 7f 7f 7f 7f
+PTE Index: 0x14 [decimal: 20], PTE content: 0xca (1 100 1010) (valid 1, pfn 0x4a) [decimal 74]
+page  74:0d0b1e08180d0b011a151b0d14030c06011d0604060b10041e 1e 04 0c 15 1b 0f 1c
+offset 0x19 [decimal 25]
+100 1010 XXXXX
+XXX XXXX 11001
+--------------
+100 1010 11001 => 1001 0101 1001 => 0x959 [value 1e]
+--------------
+
+
+./paging-multilevel-translate.py -s 1
+page  17:
+ 0: da
+ 1: f7
+ 2: f2
+ 3: a8
+ 4: 96
+ 5: c5
+ 6: 9d
+ 7: 94
+ 8: c8
+ 9: b9
+10: 7f
+11: c4
+12: 98
+13: e5
+14: 7f
+15: 7f
+16: d3
+17: a1
+18: 82
+19: 8f
+20: a6
+21: fb
+22: bf
+23: f0
+24: 7f
+25: 84
+26: d2
+27: a0
+28: 88
+29: 80
+30: c9
+31: 92
+
+Virtual Address 6c74:
+1 1011 0 0011 1 0100
+PDE Index: 0x1b [decimal: 27], PDE content: 0xa0 (1 010 0000) (valid 1, pfn 0x20) [decimal 32]
+page  32: 7f 7f 7f e1 7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7fdb7f7f7f
+PTE Index: 0x03 [decimal: 03], PTE content: 0xe1 (1 110 0001) (valid 1, pfn 0x61) [decimal 97]
+page  97:0f0d14180200190d17000d16071d1b0000101d0b 06 0d 00 06 0d 0f 07 07 06 0e 08 00
+offset 0x14 [decimal 20]
+110 0001 XXXXX
+XXX XXXX 10100
+--------------
+110 0001 10100 => 1100 0011 0100 => 0xc34 [value 0x06]
+--------------
+
+
+Virtual Address 6b22:
+1 1010 1 1001 0 0010
+PDE Index: 0x1a [decimal: 26], PDE content: 0xd2 (1 101 0010) (valid 1, pfn 0x52) [decimal 82]
+page  82:7f7f7f7f7f7f7fc67f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f c7 7f 7f df d1 7f 7f
+PTE Index: 0x19 [decimal: 25], PTE content: 0xc7 (1 100 0111) (valid 1, pfn 0x47) [decimal 71]
+page  71: 05 1e 1a 030a16161d0d191409121b1a0f120107180c051115140b0d0f18100c0f
+offset 0x02 [decimal 2]
+100 0111 XXXXX
+XXX XXXX 00010
+--------------
+100 0111 00010 => 1000 1110 0010 => 0x8e2 [value 0x1a]
+--------------
+
+
+Virtual Address 03df:
+0 0000 1 1110 1 1111
+PDE Index = 0x00 [decimal 0], PDE content: 0xda (1 101 1010) (valid 1, pfn 0x5a) [decimal 90]
+page  90:7f7f7fb17f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f 85 7f
+PTE Index: 0x1e [decimal 30], PTE content: 0x85 (1 000 0101) (valid 1, pfn 0x05) [decimal 05]
+page   5:1e120c050f1e17101a070f1d110e08101d0018191b161910110d011a11060f0f
+offset 0x1f [decimal 31]
+000 0101 XXXXX
+XXX XXXX 11111
+--------------
+000 0101 11111 => 0000 1011 1111 => 0x0bf [value 0x0f]
+--------------
+
+Virtual Address 69dc:
+1 1010 0 1110 1 1100
+PDE Index = 0x1a [decimal 26], PDE content: 0xd2 (1 101 0010) (valid 1, pfn 0x52) [decimal 82]
+page  82: 7f 7f 7f 7f 7f 7f 7f c6 7f 7f 7f 7f 7f 7f 7f 7f7f7f7f7f7f7f7f7f7fc77f7fdfd17f7f
+PTE Index: 0x0e [decimal 14], PTE content: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table entry not valid)
+
+
+Virtual Address 317a:
+0 1100 0 1011 1 1010
+PDE Index = 0x0c [decimal 12], PDE content: 0x98 (1 001 1000) (valid 1, pfn 0x18) [decimal 24]
+page  24: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f b5 7f7ffa7f7f7f7f7f7f7f7f7f7f937f7f7f7f7f7f
+PTE Index = 0x0b [decimal 11], PTE content: 0xb5 (1 011 0101) (valid 1, pfn 0x35) [decimal 53]
+page  53:031b0f0612190000041604151510061e181006140c1109130109 1e 1b 09 1a 09 1d
+offset 0x1a [decimal 26]
+011 0101 XXXXX
+XXX XXXX 11010
+--------------
+011 0101 11010 => 0110 1011 1010 => 0x6ba [value 0x1e]
+--------------
+
+Virtual Address 4546:
+1 0001 0 1010 0 0110
+PDE 0x11 [decimal 17], PDE content: 0xa1 (1 010 0001) (valid 1, pfn 0x21) [decimal 33]
+page  33: 7f 7f 7f 7f 7f 7f 99 7f 7f 7f 7f 7f7f7f7f7f7f7f7f7f7f7fd57f7f7f7f7f7f7f7f7f
+PTE Index: 0x0a [decimal 10], PTE content: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table entry not valid) 
+
+Virtual Address 2c03:
+0 1011 0 0000 0 0011
+PDE 0x0b [decimal 11], PDE content: 0xc4 (1 100 0100) (valid 1, pfn 0x44) [decimal 68]
+page  68:d77f7f7f7f7f7f7f7f7f7f7f7fac7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f
+PTE Index: 0x00 [decimal  0], PTE content: 0xd7 (1 101 0111) (valid 1, 0x57) [decimal 87]
+page  87:0f1e071602051c0617121a0b0a091a121d1b04110301021a18190a13180b1106
+offset 0x03 [decimal 3]
+101 0111 XXXXX
+XXX XXXX 00011
+--------------
+101 0111 00011 => 1010 1110 0011 => 0xae3 [value 0x16]
+--------------
+
+Virtual Address 7fd7:
+1 1111 1 1110 1 0111
+PDE 0x1f [decimal 31], PDE content: 0x92 (1 001 0010) (valid 1, pfn 0x12) [decimal 18]
+page  18:7f7fdd7f7f7f7f7f7f7f7f957f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f
+PTE 0x1e [decimal 30], PTE content: 0x7f (0 111 1111) (valid 1, pfn 0x7f) [decimal 127] --> page fault (table enty not valid)
+
+Virtual Address 390e:
+0 1110 0 1000 0 1110
+PDE 0xe [decimal 14], PDE content: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (page directory entry not valid)
+
+Virtual Address 748b:
+1 1101 0 0100 0 1011
+PDE 0x1d [decimal 29], PDE content: 0x80 (1 000 0000) (valid 1, pfn 0x00) [decimal  0]
+page   0: 7f 7f 7f 7f 7f 7fb27f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f
+PTE Index: 0x04 [decimal 4], PDE content 0x7f (0 111 1111) (valid 1, pfn 0x7f) [decimal 127] --> page fault (table entry not valid)
+
+
+
+
