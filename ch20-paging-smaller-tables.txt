@@ -304,5 +304,134 @@ page   0: 7f 7f 7f 7f 7f 7fb27f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f
 PTE Index: 0x04 [decimal 4], PDE content 0x7f (0 111 1111) (valid 1, pfn 0x7f) [decimal 127] --> page fault (table entry not valid)
 
 
+./paging-multilevel-translate.py -s 2 
 
+page 122:
+ 0: 82
+ 1: cd
+ 2: ad
+ 3: 9d
+ 4: ab
+ 5: e8
+ 6: 7f
+ 7: af
+ 8: 7f
+ 9: d3
+10: 7f
+11: f8
+12: 92
+13: ca
+14: be
+15: aa
+16: 89
+17: 7f
+18: e9
+19: 99
+20: bb
+21: 7f
+22: c2
+23: e0
+24: d7
+25: b8
+26: df
+27: 7f
+28: de
+29: b3
+30: 8a
+31: 7f
+
+Virtual Address 7570:
+1 1101 0 1011 1 0000
+PDE 0x1d [decimal 29], PDE content: 0xb3 (1 011 0011) (valid 1, pfn 0x33) [decimal 51]
+page  51:7f 7f 7f 7f 7f c9 7f 7f 7f 7f 7f 7f 7f7f7f7f7f7f7f857f7f7f7f7f7f7f7f7f7f7f7f
+PTE Index: 0x0b [decimal 11], PTE content: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table entry not valid) 
+
+Virtual Address 7268:
+1 1100 1 0011 0 1000
+PDE 0x1c [decimal 28], PDE content: 0xde (1 101 1110) (valid 1, pfn 0x5e) [decimal 94]
+page  94:7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f e5 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f
+PTE Index: 0x13 [decimal 19], PTE content: 0xe5 (1 110 0101) (valid 1, 0x65) [decimal 101]
+page 101: 1c 17 18 0a 1e 1d 04 17 16 0e100f1c0f190a1b1b0e111c160f060a15051c081c091d
+offset 0x08 [decimal 8]
+110 0101 XXXXX
+XXX XXXX 01000
+--------------
+110 0101 01000 => 1100 1010 1000 => 0xca8 [value 0x16]
+--------------
+
+Virtual Address 1f9f:
+0 0111 1 1100 1 1111
+PDE 0x07 [decimal  7], PDE content: 0xaf (1 010 1111) (valid 1, pfn 0x2f) [decimal 47]
+page  47:7f7f7f7f7f7f7fb17f7f7f7f7f7f7f7f7f7f7f987f7f7f7f7f9f7f7f 7f 7f 7f 7f
+PTE Index: 0x1c [decimal 28], PTE content: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table entry not valid) 
+
+Virtual Address 0325:
+0 0000 1 1001 0 0101
+PDE 0x00 [decimal 0], PDE content: 0x82 (1 000 0010) (valid 1, pfn 0x02) [decimal 2]
+page   2:7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7fbf7f7f7fb5 dd 7f 7f ac 7f 7f 7f
+PTE Index: 0x19 [decimal 25], PTE content: 0xdd (1 101 1101) (valid 1, pfn 0x5d) [decimal 93]
+page  93: 07 19 04 05 15 0b 011e04010a1317030a000d17161b171a150e061409030d1b0312
+offset: 0x05 [decimal 5]
+101 1101 XXXXX
+XXX XXXX 00101
+--------------
+101 1101 00101 => 1011 1010 0101 => 0xba5 [value 0x0b]
+--------------
+
+
+Virtual Address 64c4:
+1 1001 0 0110 0 0100
+PDE Index: 0x19 [decimal 25], PDE content: 0xb8 (1 011 1000) (valid 1, pfn 0x38) [decimal 56]
+page  56:7f 7f 7f a8 7f 7f 7f 7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f
+PTE Index: 0x06 [decimal 6], PTE content: 0x7f (0 111 1111) (valid 0, pfn 0x7f) [decimal 127] --> page fault (table entry not valid) 
+
+Virtual Address 0cdf:
+0 0011 0 0110 1 1111
+PDE Index: 0x03 [decimal 3], PDE content: 0x9d (1 001 1101) (valid 1, pfn 0x1d) [decimal 29]
+page  29: e7 7f db 7f 7f 7f 97 7f8f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f
+PTE Index: 0x06 [decimal  6], PTE content: 0x97 (1 001 0111) (valid 1, pfn 0x17) [decimal 23]
+page  23:06100e0913061c1d160d0f12010c100502180b101c12081e0b001503091a1400
+Offset 0x1f [decimal 31]
+001 0111 XXXXX
+XXX XXXX 11111
+--------------
+001 0111 11111 => 0010 1111 1111 => 0x2ff [value 0x00]
+--------------
+
+Virtual Address 2906:
+0 1010 0 1000 0 0110
+PDE Index: 0x0a [decimal 10], PDE content: 0x7f (0 111 1111) (valid 0, pfn 0x1f) [decimal 127] --> page fault (directory entry not valid) 
+
+Virtual Address 7a36:
+1 1110 1 0001 1 0110
+PDE Index: 0x1e [decimal 30], PDE content: 0x8a (1 000 1010) (valid 1, pfn 0x0a) [decimal 10]
+page  10: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 87 7f c3 7f 7f 7f 7f e6 7f7f7f7ff77f7f7f7f7f7f7f7f7f
+PTE Index: 0x11 [decimal 17], PTE content: 0xe6 (1 110 0110) (valid 1, pfn 0x66) [decimal 102]
+page 102:1c1909070f080d151c1219020b1e040c02021b1e14 03 09 07 14 15 0d 10 03 10 1d 17
+Offset: 0x16 [decimal 22]
+110 0110 XXXXX
+XXX XXXX 10110
+--------------
+110 0110 10110 => 1100 1101 0110 => 0xcd6 [value 0x09]
+--------------
+
+Virtual Address 21e1:
+0 1000 0 1111 0 0001
+PDE Index: 0x08 [decimal  8], PDE content: 0x7f (0 111 1111) (valid 0, pfn 0x1f) [decimal 127] --> page fault (directory entry not valid) 
+
+Virtual Address 5149:
+1 0100 0 1010 0 1001
+PDE Index: 0x14 [decimal 20], PDE content: 0xbb (1 011 1011) (valid 1, pfn 0x3b) [decimal 59]
+page  59: 7f 7f 7f 7f 7f 7f 7f 7f 7f 7f 81 7f 7f 7f 9c 7f 7f7f7f7f7f7f7f7f7f7f7fb77f7f7f7f
+PTE Index: 0x0a [decimal 10], PTE content: 0x81 (1 000 0001) (valid 1, pfn 0x01) [decimal  1]
+page   1: 16 1b 14 19 00 1d 16 12 1c 1b 031917061712051804120d07110e061d02000f191417
+offset: 0x09 [decimal 9]
+000 0001 XXXXX
+XXX XXXX 01001
+--------------
+000 0001 01001 => 0000 0010 1001 => 0x029 [value 0x1b]
+--------------
+
+Q3:
+It all depends on type of addresses being generated. If these address follow temporal or spatial locality principal, this would result in cache hit and thus faster memory access.
 
