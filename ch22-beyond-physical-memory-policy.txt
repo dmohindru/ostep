@@ -1,0 +1,16 @@
+THE CRUX: HOW TO DECIDE WHICH PAGE TO EVICT
+How can the OS decide which page (or pages) to evict from memory?
+This decision ismade by the replacement policy of the system, which usually follows some general principles (discussed below) but also includes certain tweaks to avoid corner-case behaviors.
+
+22.1 Cache Management
+---------------------
+Given that main memory holds some subset of all the pages in the system, it can rightly be viewed as a cache for virtual memory pages in the system. Thus, our goal in picking a replacement policy for this cache is to minimize the number of cache misses, i.e., to minimize the number of times that we have to fetch a page from disk.
+Unfortunately, as you can see in this example, the cost of disk access is so high in modern systems that even a tiny miss rate will quickly dominate the overall AMAT of running programs. Clearly, we need to avoid as many misses as possible or run slowly, at the rate of the disk.
+
+22.2 The Optimal Replacement Policy
+-----------------------------------
+Belady showed that a simple (but, unfortunately, difficult to implement!) approach that replaces the page that will be accessed furthest in the future is the optimal policy, resulting in the fewest-possible cache misses.
+Unfortunately, as we saw before in the development of scheduling policies, the future is not generally known; you can’t build the optimal policy for a general-purpose operating system1. Thus, in developing a real, deployable policy, we will focus on approaches that find some other way to decide which page to evict. The optimal policy will thus serve only as a comparison point, to know how close we are to “perfect”.
+
+22.3 A Simple Policy: FIFO
+--------------------------
