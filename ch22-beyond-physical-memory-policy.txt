@@ -14,3 +14,166 @@ Unfortunately, as we saw before in the development of scheduling policies, the f
 
 22.3 A Simple Policy: FIFO
 --------------------------
+Many early systems avoided the complexity of trying to approach optimal and employed very simple replacement policies. For example, some systems used FIFO first-in, first-out) replacement, where pages were simply placed in a queue when they enter the system; when a replacement occurs, the page on the tail of the queue (the “first-in” page) is evicted. FIFO has one great strength: it is quite simple to implement.
+
+22.4 Another Simple Policy: Random
+----------------------------------
+Another similar replacement policy is Random, which simply picks a random page to replace under memory pressure. Random has properties similar to FIFO; it is simple to implement, but it doesn’t really try to be too intelligent in picking which blocks to evict.
+
+22.5 Using History: LRU
+-----------------------
+As we did with scheduling policy, to improve our guess at the future, we once again lean on the past and use history as our guide. For example, if a program has accessed a page in the near past, it is likely to access it again in the near future. This family of policies is based on what people refer to as the principle of locality [D70], which basically is just an observation about programs and their behavior.
+
+22.6 Workload Examples
+----------------------
+
+22.7 Implementing Historical Algorithms
+---------------------------------------
+To keep track of which pages have been least- andmost-recently used, the systemhas to do some accounting work on every memory reference. Clearly, without great care, such accounting could greatly reduce performance. Unfortunately, as the number of pages in a system grows, scanning a huge array of times just to find the absolute least-recently-used page is prohibitively expensive. Imagine a modern machine with 4GB of memory, chopped into 4KB pages. This machine has 1 million pages, and thus finding the LRU page will take a long time, even at modern CPU speeds.
+
+22.8 Approximating LRU
+----------------------
+As it turns out, the answer is yes: approximating LRU is more feasible from a computational-overhead standpoint, and indeed it is what many modern systems do. The idea requires some hardware support, in the form of a use bit (sometimes called the reference bit). Whenever a page is referenced (i.e., read or written), the use bit is set by hardware to 1. The hardware never clears the bit, though (i.e., sets it to 0); that is the responsibility of the OS.
+
+22.9 Considering Dirty Pages
+----------------------------
+The reason for this: if a page has been modified and is thus dirty, it must be written back to disk to evict it, which is expensive. If it has not been modified (and is thus clean), the eviction is free; the physical frame can simply be reused for other purposes without additional I/O. Thus, some VM systems prefer to evict clean pages over dirty pages. To support this behavior, the hardware should include a modified bit (a.k.a. dirty bit). This bit is set any time a page is written, and thus can be incorporated into the page-replacement algorithm. The clock algorithm, for example, could be changed to scan for pages that are both unused and clean to evict first
+
+22.10 Other VM Policies
+-----------------------
+For most pages, the OS simply uses demand paging, which means the OS brings the page into memory when it is accessed, “on demand” as it were. Of course, the OS could guess that a page is about to be used, and thus bring it in ahead of time; this behavior is known as prefetching and should only be done when there is reasonable chance of success.
+
+22.11 Thrashing
+---------------
+Before closing, we address one final question: what should the OS do whenmemory is simply oversubscribed, and thememory demands of the set of running processes simply exceeds the available physical memory? In this case, the system will constantly be paging, a condition sometimes referred to as thrashing [D70]. This approach, generally known as admission control, states that it is sometimes better to do less work well than to try to do everything at once poorly, a situation we often encounter in real life as well as in modern computer systems (sadly).
+
+Homework Exercises
+------------------
+
+Q1:
+OPT format
+Access: 5  HIT  Left  ->    [4, 5, 3] <- Right Replaced:- [Hits:4 Misses:6]
+LRU format
+Access: 5  MISS LRU ->    [3, 4, 5] <- MRU Replaced:7 [Hits:2 Misses:8]
+FIFO format
+Access: 4  MISS FirstIn ->    [8, 7, 4] <- Lastin  Replaced:- [Hits:0 Misses:3]
+FINALSTATS hits 1   misses 9   hitrate 10.00
+
+./paging-policy.py -s 0 -n 10 -p OPT
+
+Access: 8 MISS Left  ->        [8] <- Right Replaced:- [Hits:0 Misses:1] 
+Access: 7 MISS Left  ->     [8, 7] <- Right Replaced:- [Hits:0 Misses:2]  
+Access: 4 MISS Left  ->  [8, 7, 4] <- Right Replaced:- [Hits:0 Misses:3]   
+Access: 2 MISS Left  ->  [7, 4, 2] <- Right Replaced:8 [Hits:0 Misses:4]    
+Access: 5 MISS Left  ->  [7, 4, 5] <- Right Replaced:2 [Hits:0 Misses:5]     
+Access: 4 HIT  Left  ->  [7, 4, 5] <- Right Replaced:- [Hits:1 Misses:5]      
+Access: 7 HIT  Left  ->  [7, 4, 5] <- Right Replaced:- [Hits:2 Misses:5]       
+Access: 3 MISS Left  ->  [4, 5, 3] <- Right Replaced:7 [Hits:2 Misses:6]        
+Access: 4 HIT  Left  ->  [4, 5, 3] <- Right Replaced:- [Hits:3 Misses:6]        
+Access: 5 HIT  Left  ->  [4, 5, 3] <- Right Replaced:- [Hits:4 Misses:6]
+FINALSTATS hits 4   misses 5   hitrate 40.00       
+
+./paging-policy.py -s 0 -n 10 -p LRU
+Access: 8 MISS LRU  ->        [8] <- MRU Replaced:- [Hits:0 Misses:1] 
+Access: 7 MISS LRU  ->     [8, 7] <- MRU Replaced:- [Hits:0 Misses:2]  
+Access: 4 MISS LRU  ->  [8, 7, 4] <- MRU Replaced:- [Hits:0 Misses:3]   
+Access: 2 MISS LRU  ->  [7, 4, 2] <- MRU Replaced:8 [Hits:0 Misses:4]    
+Access: 5 MISS LRU  ->  [4, 2, 5] <- MRU Replaced:7 [Hits:0 Misses:5]     
+Access: 4 HIT  LRU  ->  [2, 5, 4] <- MRU Replaced:- [Hits:1 Misses:5]      
+Access: 7 MISS LRU  ->  [5, 4, 7] <- MRU Replaced:2 [Hits:1 Misses:6]       
+Access: 3 MISS LRU  ->  [4, 7, 3] <- MRU Replaced:5 [Hits:1 Misses:7]        
+Access: 4 HIT  LRU  ->  [7, 3, 4] <- MRU Replaced:- [Hits:2 Misses:7]        
+Access: 5 MISS LRU  ->  [3, 4, 5] <- MRU Replaced:7 [Hits:2 Misses:8]
+FINALSTATS hits 2   misses 8   hitrate 20.00
+
+./paging-policy.py -s 0 -n 10 -p FIFO
+Access: 8 MISS FirstIn  ->       [8] <- LastIn Replaced:- [Hits:0 Misses:1] 
+Access: 7 MISS FirstIn  ->    [8, 7] <- LastIn Replaced:- [Hits:0 Misses:2]  
+Access: 4 MISS FirstIn  -> [8, 7, 4] <- LastIn Replaced:- [Hits:0 Misses:3]   
+Access: 2 MISS FirstIn  -> [7, 4, 2] <- LastIn Replaced:8 [Hits:0 Misses:4]    
+Access: 5 MISS FirstIn  -> [4, 2, 5] <- LastIn Replaced:7 [Hits:0 Misses:5]     
+Access: 4 HIT  FirstIn  -> [4, 2, 5] <- LastIn Replaced:- [Hits:1 Misses:5]      
+Access: 7 MISS FirstIn  -> [2, 5, 7] <- LastIn Replaced:4 [Hits:1 Misses:6]       
+Access: 3 MISS FirstIn  -> [5, 7, 3] <- LastIn Replaced:2 [Hits:1 Misses:7]        
+Access: 4 MISS FirstIn  -> [7, 3, 4] <- LastIn Replaced:5 [Hits:1 Misses:8]        
+Access: 5 MISS FirstIn  -> [3, 4, 5] <- LastIn Replaced:7 [Hits:1 Misses:9]
+FINALSTATS hits 1   misses 9   hitrate 10.00
+
+./paging-policy.py -s 1 -n 10 -p OPT
+Access: 1 MISS Left  ->        [1] <- Right Replaced:- [Hits:0 Misses:1]
+Access: 8 MISS Left  ->     [1, 8] <- Right Replaced:- [Hits:0 Misses:2] 
+Access: 7 MISS Left  ->  [1, 8, 7] <- Right Replaced:- [Hits:0 Misses:3]  
+Access: 2 MISS Left  ->  [8, 7, 2] <- Right Replaced:1 [Hits:0 Misses:4]   
+Access: 4 MISS Left  ->  [7, 2, 4] <- Right Replaced:8 [Hits:0 Misses:5]    
+Access: 4 HIT  Left  ->  [7, 2, 4] <- Right Replaced:- [Hits:1 Misses:5] 
+Access: 6 MISS Left  ->  [7, 4, 6] <- Right Replaced:2 [Hits:1 Misses:6]  
+Access: 7 HIT  Left  ->  [7, 4, 6] <- Right Replaced:- [Hits:2 Misses:6]   
+Access: 0 MISS Left  ->  [4, 6, 0] <- Right Replaced:7 [Hits:2 Misses:7]    
+Access: 0 HIT  Left  ->  [4, 6, 0] <- Right Replaced:- [Hits:3 Misses:7]     
+FINALSTATS hits 3   misses 7   hitrate 30.00
+
+./paging-policy.py -s 1 -n 10 -p LRU
+Access: 1 MISS LRU  ->        [1] <- MRU Replaced:- [Hits:0 Misses:1]
+Access: 8 MISS LRU  ->     [1, 8] <- MRU Replaced:- [Hits:0 Misses:2] 
+Access: 7 MISS LRU  ->  [1, 8, 7] <- MRU Replaced:- [Hits:0 Misses:3]  
+Access: 2 MISS LRU  ->  [8, 7, 2] <- MRU Replaced:1 [Hits:0 Misses:4]   
+Access: 4 MISS LRU  ->  [7, 2, 4] <- MRU Replaced:8 [Hits:0 Misses:5]    
+Access: 4 HIT  LRU  ->  [7, 2, 4] <- MRU Replaced:- [Hits:1 Misses:5] 
+Access: 6 MISS LRU  ->  [2, 4, 6] <- MRU Replaced:7 [Hits:1 Misses:6]  
+Access: 7 MISS LRU  ->  [4, 6, 7] <- MRU Replaced:2 [Hits:1 Misses:7]   
+Access: 0 MISS LRU  ->  [6, 7, 0] <- MRU Replaced:4 [Hits:1 Misses:8]    
+Access: 0 HIT  LRU  ->  [6, 7, 0] <- MRU Replaced:- [Hits:2 Misses:8]     
+FINALSTATS hits 2   misses 8   hitrate 20.00
+
+./paging-policy.py -s 1 -n 10 -p FIFO
+Access: 1 MISS FirstIn  ->        [1] <- LastIn Replaced:- [Hits:0 Misses:1]
+Access: 8 MISS FirstIn  ->     [1, 8] <- LastIn Replaced:- [Hits:0 Misses:2] 
+Access: 7 MISS FirstIn  ->  [1, 8, 7] <- LastIn Replaced:- [Hits:0 Misses:3]  
+Access: 2 MISS FirstIn  ->  [8, 7, 2] <- LastIn Replaced:1 [Hits:0 Misses:4]   
+Access: 4 MISS FirstIn  ->  [7, 2, 4] <- LastIn Replaced:8 [Hits:0 Misses:5]    
+Access: 4 HIT  FirstIn  ->  [7, 2, 4] <- LastIn Replaced:- [Hits:1 Misses:5] 
+Access: 6 MISS FirstIn  ->  [2, 4, 6] <- LastIn Replaced:7 [Hits:1 Misses:6]  
+Access: 7 MISS FirstIn  ->  [4, 6, 7] <- LastIn Replaced:2 [Hits:1 Misses:7]   
+Access: 0 MISS FirstIn  ->  [6, 7, 0] <- LastIn Replaced:4 [Hits:1 Misses:8]    
+Access: 0 HIT  FirstIn  ->  [6, 7, 0] <- LastIn Replaced:- [Hits:2 Misses:8]     
+FINALSTATS hits 2   misses 8   hitrate 20.00
+
+./paging-policy.py -s 2 -n 10 -p OPT
+Access: 9 MISS Left  ->        [9] <- Right Replaced:- [Hits:0 Misses:1]
+Access: 9 HIT  Left  ->        [9] <- Right Replaced:- [Hits:1 Misses:1]
+Access: 0 MISS Left  ->     [9, 0] <- Right Replaced:- [Hits:1 Misses:2]
+Access: 0 HIT  Left  ->     [9, 0] <- Right Replaced:- [Hits:2 Misses:2]
+Access: 8 MISS Left  ->  [9, 0, 8] <- Right Replaced:- [Hits:2 Misses:3]
+Access: 7 MISS Left  ->  [0, 8, 7] <- Right Replaced:9 [Hits:2 Misses:4]
+Access: 6 MISS Left  ->  [8, 7, 6] <- Right Replaced:0 [Hits:2 Misses:5]
+Access: 3 MISS Left  ->  [7, 6, 3] <- Right Replaced:8 [Hits:2 Misses:6]
+Access: 6 HIT  Left  ->  [7, 6, 3] <- Right Replaced:- [Hits:3 Misses:6]
+Access: 6 HIT  Left  ->  [7, 6, 3] <- Right Replaced:- [Hits:4 Misses:6]
+FINALSTATS hits 4   misses 6   hitrate 40.00
+
+./paging-policy.py -s 2 -n 10 -p LRU
+Access: 9 MISS LRU  ->        [9] <- MRU Replaced:- [Hits:0 Misses:1]
+Access: 9 HIT  LRU  ->        [9] <- MRU Replaced:- [Hits:1 Misses:1]
+Access: 0 MISS LRU  ->     [9, 0] <- MRU Replaced:- [Hits:1 Misses:2]
+Access: 0 HIT  LRU  ->     [9, 0] <- MRU Replaced:- [Hits:2 Misses:2]
+Access: 8 MISS LRU  ->  [9, 0, 8] <- MRU Replaced:- [Hits:2 Misses:3]
+Access: 7 MISS LRU  ->  [0, 8, 7] <- MRU Replaced:9 [Hits:2 Misses:4]
+Access: 6 MISS LRU  ->  [8, 7, 6] <- MRU Replaced:0 [Hits:2 Misses:5]
+Access: 3 MISS LRU  ->  [7, 6, 3] <- MRU Replaced:8 [Hits:2 Misses:6]
+Access: 6 HIT  LRU  ->  [7, 3, 6] <- MRU Replaced:- [Hits:3 Misses:6]
+Access: 6 HIT  LRU  ->  [7, 3, 6] <- MRU Replaced:- [Hits:4 Misses:6]
+FINALSTATS hits 4   misses 6   hitrate 40.00
+
+./paging-policy.py -s 2 -n 10 -p FIFO
+Access: 9 MISS FirstIn  ->        [9] <- LastIn Replaced:- [Hits:0 Misses:1]
+Access: 9 HIT  FirstIn  ->        [9] <- LastIn Replaced:- [Hits:1 Misses:1]
+Access: 0 MISS FirstIn  ->     [9, 0] <- LastIn Replaced:- [Hits:1 Misses:2]
+Access: 0 HIT  FirstIn  ->     [9, 0] <- LastIn Replaced:- [Hits:2 Misses:2]
+Access: 8 MISS FirstIn  ->  [9, 0, 8] <- LastIn Replaced:- [Hits:2 Misses:3]
+Access: 7 MISS FirstIn  ->  [0, 8, 7] <- LastIn Replaced:9 [Hits:2 Misses:4]
+Access: 6 MISS FirstIn  ->  [8, 7, 6] <- LastIn Replaced:0 [Hits:2 Misses:5]
+Access: 3 MISS FirstIn  ->  [7, 6, 3] <- LastIn Replaced:8 [Hits:2 Misses:6]
+Access: 6 HIT  FirstIn  ->  [7, 6, 3] <- LastIn Replaced:- [Hits:3 Misses:6]
+Access: 6 HIT  FirstIn  ->  [7, 6, 3] <- LastIn Replaced:- [Hits:4 Misses:6]
+FINALSTATS hits 4   misses 6   hitrate 40.00
+
