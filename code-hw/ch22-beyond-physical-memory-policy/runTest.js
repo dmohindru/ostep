@@ -17,9 +17,9 @@ const pagingPolicies = ['FIFO', 'LRU', 'OPT', 'RAND', 'CLOCK'];
 // const scriptFile = 'paging-policy.py -f vpn.txt -N -p LRU -C 10 -c';
 //=========Configuration options====================
 const scriptFile = 'paging-policy.py';
-const addressFile = 'vpn.txt';
+const addressFile = 'date-vpn.txt';
 const maxCacheSize = 10;
-const imageFile = 'ls.png';
+const imageFile = 'date.png';
 //====================================================
 
 const runScript = (policy, cacheSize) => {

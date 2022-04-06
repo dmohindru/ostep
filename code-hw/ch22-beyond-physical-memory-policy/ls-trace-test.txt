@@ -1,0 +1,16 @@
+==7164== Lackey, an example Valgrind tool
+==7164== Copyright (C) 2002-2017, and GNU GPL'd, by Nicholas Nethercote.
+==7164== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==7164== Command: ls
+==7164== 
+I  04001100,3
+I  04001103,5
+ S 1fff000448,8
+I  04001df0,4
+I  04001df4,1
+ S 1fff000440,8
+I  04001df5,3
+I  04001df8,2
+ S 1fff000438,8
+I  04001dfa,3
+I  0401a0a2,3

@@ -177,3 +177,52 @@ Access: 6 HIT  FirstIn  ->  [7, 6, 3] <- LastIn Replaced:- [Hits:3 Misses:6]
 Access: 6 HIT  FirstIn  ->  [7, 6, 3] <- LastIn Replaced:- [Hits:4 Misses:6]
 FINALSTATS hits 4   misses 6   hitrate 40.00
 
+Q2:
+./paging-policy.py --addresses=0,1,2,3,4,5,0,1,2,3,4,5 --policy=FIFO --cachesize=5 -c
+./paging-policy.py --addresses=0,1,2,3,4,5,0,1,2,3,4,5 --policy=LRU --cachesize=5 -c
+./paging-policy.py --addresses=0,1,2,3,4,5,4,5,4,5,4,5 --policy=MRU --cachesize=5 -c
+
+Q3:
+./paging-policy.py -s 0 -n 1000 -c
+FINALSTATS hits 301   misses 699   hitrate 30.10
+
+./paging-policy.py -s 0 -n 1000 -c --policy=LRU
+FINALSTATS hits 307   misses 693   hitrate 30.70
+
+./paging-policy.py -s 0 -n 1000 -c --policy=OPT
+FINALSTATS hits 519   misses 481   hitrate 51.90
+
+./paging-policy.py -s 0 -n 1000 -c --policy=UNOPT
+FINALSTATS hits 92   misses 908   hitrate 9.20
+
+./paging-policy.py -s 0 -n 1000 -c --policy=RAND
+FINALSTATS hits 298   misses 702   hitrate 29.80
+
+./paging-policy.py -s 0 -n 1000 -c --policy=CLOCK
+FINALSTATS hits 279   misses 721   hitrate 27.90
+
+Q4:
+./generate-trace.py
+[3, 0, 6, 6, 6, 6, 7, 0, 6, 6]
+
+./paging-policy.py --addresses=3,0,6,6,6,6,7,0,6,6 --policy=LRU -c
+FINALSTATS hits 6   misses 4   hitrate 60.00
+
+./paging-policy.py --addresses=3,0,6,6,6,6,7,0,6,6 --policy=RAND -c
+FINALSTATS hits 5   misses 5   hitrate 50.00
+
+./paging-policy.py --addresses=3,0,6,6,6,6,7,0,6,6 --policy=CLOCK -c -b 2
+FINALSTATS hits 4   misses 6   hitrate 40.00
+
+./paging-policy.py --addresses=3,0,6,6,6,6,7,0,6,6 --policy=CLOCK -c -b 1
+FINALSTATS hits 5   misses 5   hitrate 50.00
+
+./paging-policy.py --addresses=3,0,6,6,6,6,7,0,6,6 --policy=CLOCK -c -b 0
+FINALSTATS hits 5   misses 5   hitrate 50.00
+
+Q5:
+Steps to follow
+1. Use valgrind to generate memory trace
+2. Use any script to convert memory trace to virtual page numbers
+3. Use virtual page number generated in step 2 to run simulation with different page replacement policy (OPT, LRU, FIFO, RAND, CLOCK) record their results
+4. Use charting library to generate graphs for different policy

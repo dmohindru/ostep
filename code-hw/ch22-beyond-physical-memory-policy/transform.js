@@ -11,9 +11,10 @@ const readline = require('readline');
 */
 
 // Read file ls-trace.txt line by line
-const file = 'ls-trace-test.txt';
+const inFile = 'date-trace.txt';
+const outFile = 'date-vpn.txt';
 const rl = readline.createInterface({
-  input: fs.createReadStream(file),
+  input: fs.createReadStream(inFile),
   output: process.stdout,
   terminal: false,
 });
@@ -30,6 +31,6 @@ rl.on('line', function (line) {
     const pfNumber = intVal >> 12;
 
     // console.log(`${hexString} -  ${intVal} - ${pfNumber}`);
-    fs.appendFileSync('vpn-test.txt', pfNumber + '\n');
+    fs.appendFileSync(outFile, pfNumber + '\n');
   }
 });
