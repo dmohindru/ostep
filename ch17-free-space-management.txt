@@ -1,7 +1,7 @@
 17.1 Assumptions
 ----------------
 The space that this library manages is known historically as the heap, and the generic data structure used to manage free space in the heap is some kind of free list.
-We further assume that primarily we are concernedwith external fragmentation. Allocators could of course also have the problem of internal fragmentation.
+We further assume that primarily we are concerned with external fragmentation. Allocators could of course also have the problem of internal fragmentation.
 
 17.2 Low-level Mechanisms
 -------------------------
@@ -18,7 +18,7 @@ Allocator strategies
 
 17.4 Other Approaches
 ---------------------
-Beyond the basic approaches described above, there have been a host of suggested techniques and algorithms to improvememory allocation in some way. We list a few of them here for your consideration.
+Beyond the basic approaches described above, there have been a host of suggested techniques and algorithms to improve memory allocation in some way. We list a few of them here for your consideration.
 
 - Segregated Lists
 The basic idea is simple: if a particular application has one (or a few) popular-sized request that it makes, keep a separate list just to manage objects of that size; all other requests are forwarded to a more general memory allocator.

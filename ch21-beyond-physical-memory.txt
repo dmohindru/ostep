@@ -1,0 +1,88 @@
+THE CRUX: HOW TO GO BEYOND PHYSICAL MEMORY
+How can the OS make use of a larger, slower device to transparently provide the illusion of a large virtual address space?
+
+21.1 Swap Space
+---------------
+The first thing we will need to do is to reserve some space on the disk formoving pages back and forth. In operating systems,we generally refer to such space as swap space, because we swap pages out of memory to it and swap pages into memory from it.
+
+21.2 The Present Bit
+--------------------
+The way the hardware (or the OS, in a software-managed TLB approach) determines this is through a new piece of information in each page-table entry, known as the present bit. If the present bit is set to one, it means the page is present in physical memory and everything proceeds as above; if it is set to zero, the page is not in memory but rather on disk somewhere. The act of accessing a page that is not in physical memory is commonly referred to as a page fault.
+
+21.3 The Page Fault
+-------------------
+Recall that with TLB misses, we have two types of systems: hardwaremanaged TLBs (where the hardware looks in the page table to find the desired translation) and software-managed TLBs (where the OS does). In either type of system, if a page is not present, the OS is put in charge to handle the page fault. The appropriately-named OS page-fault handler runs to determine what to do.
+
+21.4 What If Memory Is Full?
+----------------------------
+The process of picking a page to kick out, or replace is known as the page-replacement policy. As it turns out, a lot of thought has been put into creating a good pagereplacement policy, as kicking out the wrong page can exact a great cost on program performance.
+
+21.5 Page Fault Control Flow
+----------------------------
+
+21.6 When Replacements Really Occur
+-----------------------------------
+To keep a small amount of memory free, most operating systems thus have some kind of high watermark (HW) and low watermark (LW) to help decidewhen to start evicting pages frommemory. How thisworks is as follows: when the OS notices that there are fewer than LW pages available, a background thread that is responsible for freeing memory runs. The thread evicts pages until there are HW pages available. The background thread, sometimes called the swap daemon or page daemon1, then goes to sleep, happy that it has freed some memory for running processes and the OS to use.
+
+Homework exercises
+------------------
+Q1:
+user time changes from almost zero to 100 and this number doesn't change when we run more instance of mem program
+
+Q2:
+When `mem 1024` command is executed systems free memeory is reduced by 1GB
+When above program is terminated systems free memory is restored.
+
+Q3:
+- swap-in, swap-out start showing non zero value when a mem program is allocated more than available memory in system.
+- As mem program is allocated more memory than a physical memory then memory bandwidth is considerably reduced. In my case it reduced from 7600.43 MB/s to 52.69 MB/s and then marginally increased to 125.00 MB/s and stablized there.
+
+Q4:
+statistics reading when 
+mem program is allocated memory less than available physical memory
+cpu time
+- us (user time): almost 100%
+- sy (system time): almost zero
+- id (idea time): zero
+- wa (wait time): zero
+io
+bi (block input): zero
+bo (block output): zero
+
+mem program is allocated memory more than available physical memory
+cpu time
+- us (user time): under 10 %
+- sy (system time): averaging at almost 30%
+- id (idea time): still zero
+- wa (wait time): wait time has increased considerable
+io
+bi (block input): has become non zero and propotional to extra memory allocated 
+bo (block output): has become non zero and propotional to extra memory allocated
+
+Q5:
+When mem program allocated memory less than available physical memory
+loop 0 in 451.55 ms (bandwidth: 2267.73 MB/s)
+loop 2 in 121.09 ms (bandwidth: 8456.24 MB/s)
+...
+loop 282 in 131.80 ms (bandwidth: 7769.58 MB/s)
+loop 284 in 128.97 ms (bandwidth: 7939.90 MB/s)
+loop 286 in 132.68 ms (bandwidth: 7717.64 MB/s)
+
+When mem program allocated memory more than available physical memory
+loop 0 in 1156.23 ms (bandwidth: 1643.27 MB/s)
+loop 1 in 7009.94 ms (bandwidth: 271.04 MB/s)
+loop 2 in 5972.96 ms (bandwidth: 318.10 MB/s)
+...
+loop 3 in 7452.68 ms (bandwidth: 254.94 MB/s)
+loop 4 in 11258.02 ms (bandwidth: 168.77 MB/s)
+loop 5 in 14208.03 ms (bandwidth: 133.73 MB/s)
+
+observation the first loop in both the cases are almost similar. However in subsequent loops memory bandwidth is considerable less in situation where program is allocated more memory than available physical memory.
+
+Q6:
+Memory allocation is failed almost at the begining of the program when memory requested is more than available physical + swap space. Hence program is terminated by OS.
+
+Q7:
+Necessary hardware not available to measure these statistics :-(
+
+
